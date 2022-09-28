@@ -1,7 +1,7 @@
 """
 Generate train/dev/test datasets from a csv file.
 
-The data csv needs to have these columns: 'text','domain' and all columns in desired mf_labels.
+The data csv needs to have these columns: 'text','domain' and all columns in desired mf_label_names.
 """
 
 import pandas as pd
@@ -105,7 +105,7 @@ def gen_semi_supervised(
         val: pd.DataFrame,
         test: pd.DataFrame,
         train_frac: float = 0.8,
-        seed: int = 3) -> Dict[str: pd.DataFrame]:
+        seed: int = 3) -> Dict[str, pd.DataFrame]:
     """
     Separate train/dev/test data by source and target domains.
 
@@ -162,12 +162,12 @@ def load_data(
         semi_supervised: bool,
         max_seq_len: int = 50,
         train_frac: float = 0.8,
-        seed: int = 3) -> Dict[str: MFData]:
+        seed: int = 3) -> Dict[str, MFData]:
     """
     Generate train/dev/test datasets.
 
     Args:
-        data_dir: should be a csv with these columns: 'text','domain' and mf_labels
+        data_dir: should be a csv with these columns: 'text','domain' and mf_label_names
         tokenizer_path: where to load pretrained tokenizer
         n_mf_classes: number of moral foundation classes in the data
         train_domain: the name of the domains for training, should be in the 'domain' column in df
@@ -182,12 +182,12 @@ def load_data(
     """
     # decide the MF labels
     if n_mf_classes == 2:
-        mf_labels = ['moral', 'immoral']
+        mf_label_names = ['moral', 'immoral']
     elif n_mf_classes == 10:
-        mf_labels = ['care', 'harm', 'fairness', 'cheating', 'loyalty',
+        mf_label_names = ['care', 'harm', 'fairness', 'cheating', 'loyalty',
                      'betrayal', 'authority', 'subversion', 'purity', 'degradation']
     elif n_mf_classes == 5:
-        mf_labels = ['care', 'fairness', 'loyalty', 'authority', 'purity']
+        mf_label_names = ['care', 'fairness', 'loyalty', 'authority', 'purity']
     else:
         raise ValueError(
             'n_mf_classes not valid. Choose from 2, 5 or 10.')
@@ -227,13 +227,12 @@ def load_data(
             tokenizer,
             truncation=True,
             max_length=max_seq_len,
-            padding="max_length",
-            return_tensors='pt'
-        ).tolist()
+            padding="max_length"
+        ).tolist()[:20]
 
-        mf_labels = v[mf_labels].values
+        mf_labels = v[mf_label_names].values[:20]
 
-        domain_labels = v['domain_idx'].values
+        domain_labels = v['domain_idx'].values[:20]
 
         datasets[k] = MFData(encodings, mf_labels, domain_labels)
 

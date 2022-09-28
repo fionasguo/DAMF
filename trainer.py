@@ -18,6 +18,7 @@ from data_loader import *
 from modules import *
 from model import *
 from evaluate import *
+from utils import get_gpu_memory_map
 
 def worker_init_fn(worker_id):
     np.random.seed(np.random.get_state()[1][0] + worker_id)
@@ -64,21 +65,6 @@ class DomainAdaptTrainer:
             p.requires_grad = True
 
     ################################ Utils ##################################
-
-    def get_gpu_memory_map(self):
-        """
-        Get the current gpu usage.
-        returns a dict: key - device id int; val - memory usage in MB (int).
-        """
-        result = subprocess.check_output(
-            [
-                'nvidia-smi', '--query-gpu=memory.used',
-                '--format=csv,nounits,noheader'
-            ], encoding='utf-8')
-        # Convert lines into a dictionary
-        gpu_memory = [int(x) for x in result.strip().split('\n')]
-        gpu_memory_map = dict(zip(range(len(gpu_memory)), gpu_memory))
-        return gpu_memory_map
 
     def create_optimizer_and_scheduler_basic(self):
         # optimizer
@@ -313,7 +299,7 @@ class DomainAdaptTrainer:
             self.scheduler.step()
 
             if self.args['device'] != 'cpu':
-                logging.debug('GPU usage (MB): ',self.get_gpu_memory_map())
+                logging.debug('GPU usage (MB): ',get_gpu_memory_map())
 
         logging.info('============ Training Summary ============= \n')
         logging.info(f'Best Macro F1 of the VAL dataset: {best_accu} at epoch {best_epoch}')
@@ -433,7 +419,7 @@ class DomainAdaptTrainer:
             self.scheduler.step()
 
             if self.args['device'] != 'cpu':
-                logging.debug(self.get_gpu_memory_map())
+                logging.debug(get_gpu_memory_map())
 
 
         logging.info('============ Training Summary ============= \n')

@@ -85,7 +85,6 @@ def read_args():
         args['seed_lst'] = literal_eval(command_args.seeds)
     if not os.path.exists(args['output_path']):
         os.makedirs(args['output_path'])
-    args['aflite'] = literal_eval(args['aflite'])
     args['domain_adapt'] = literal_eval(args['domain_adapt'])
     args['transformation'] = literal_eval(args['transformation'])
     args['reconstruction'] = literal_eval(args['reconstruction'])
@@ -103,12 +102,10 @@ def read_args():
     args['lr'] = float(args['lr'])
     args['alpha'] = float(args['alpha'])
     args['beta'] = float(args['beta'])
-    args['max_seq_len'] = int(args['max_seq_len'])
     args['batch_size'] = int(args['batch_size'])
     args['n_epoch'] = int(args['n_epoch'])
     args['dropout_rate'] = float(args['dropout_rate'])
     args['seed'] = int(args['seed'])
-    args['balance'] = literal_eval(args['balance'])
     args['device'] = "cuda:0" if torch.cuda.is_available() else "cpu"
     try:
         args['lambda_trans'] = float(args['lambda_trans'])
