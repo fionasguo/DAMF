@@ -1,5 +1,5 @@
 import torch.nn as nn
-from functions import ReverseLayerF
+from grad_rev_fn import ReverseLayerF
 import transformers
 from transformers import AutoModel,AutoConfig
 transformers.logging.set_verbosity_error()
