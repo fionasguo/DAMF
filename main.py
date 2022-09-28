@@ -45,13 +45,13 @@ from torch.utils.data import DataLoader
 
 import transformers
 
-from generate_datasets import *
+from generate_datasets import load_data
 from model import *
 from trainer import *
 from evaluate import *
 from utils import *
 
-os.environ["TOKENIZERS_PARALLELISM"] = "false"
+# os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
 def read_args():
     # command args
@@ -150,16 +150,12 @@ if __name__ == '__main__':
 
     # data should be in a csv file with these columns: 'text','domain' and MF_LABELS
     datasets = load_data(args['data_dir'],
-                         args['max_seq_len'],
                          args['pretrained_path'],
                          args['n_mf_classes'],
-                         args['aflite'],
+                         args['train_domain'],
+                         args['test_domain'],
                          args['semi_supervised'],
-                         train_domain=args['train_domain'],
-                         test_domain=args['test_domain'],
-                         train_frac=0.8,
-                         seed=args['seed'],
-                         balance=args['balance'])
+                         args['seed'])
 
     logging.info(f'Finished processing data. Time: {time.time()-start_time}')
 
@@ -178,16 +174,12 @@ if __name__ == '__main__':
                 # args['gamma'] = gamma
 
                 datasets = load_data(args['data_dir'],
-                                     args['max_seq_len'],
                                      args['pretrained_path'],
                                      args['n_mf_classes'],
-                                     args['aflite'],
+                                     args['train_domain'],
+                                     args['test_domain'],
                                      args['semi_supervised'],
-                                     train_domain=args['train_domain'],
-                                     test_domain=args['test_domain'],
-                                     train_frac=0.8,
-                                     seed=args['seed'],
-                                     balance=args['balance'])
+                                     args['seed'])
 
                 trainer = DomainAdaptTrainer(datasets, args)
                 accu = trainer.train()
@@ -221,16 +213,12 @@ if __name__ == '__main__':
             set_seed(s)
 
             datasets = load_data(args['data_dir'],
-                                 args['max_seq_len'],
                                  args['pretrained_path'],
                                  args['n_mf_classes'],
-                                 args['aflite'],
+                                 args['train_domain'],
+                                 args['test_domain'],
                                  args['semi_supervised'],
-                                 train_domain=args['train_domain'],
-                                 test_domain=args['test_domain'],
-                                 train_frac=0.8,
-                                 seed=args['seed'],
-                                 balance=args['balance'])
+                                 args['seed'])
 
             trainer = DomainAdaptTrainer(datasets, args)
             accu = trainer.train()
@@ -272,7 +260,7 @@ if __name__ == '__main__':
                     feature_embedding_analysis(datasets['s_val'],datasets['t_val'],args['batch_size'],fig_save_path=args['output_path'],model_path=args['output_path']+'/best_model.pth')
             except:
                 pass
-            
+
             if args.get('mf_model_path') != None:
                 # evaluate with the given model path
                 test_accu = evaluate(datasets['test'],args['batch_size'],model_path=args['mf_model_path'],domain_adapt=args['domain_adapt'],test=True)
