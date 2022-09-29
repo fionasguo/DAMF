@@ -1,3 +1,7 @@
+"""
+Preprocess tweets.
+"""
+
 import re
 import string
 import nltk
@@ -6,7 +10,6 @@ from nltk.corpus import stopwords
 # nltk.download('punkt')
 from emoji import demojize
 
-######################### Preprocessing #########################
 
 EMOTICONS = set([':-)', ':)', ';)', ':o)', ':]', ':3', ':c)', ':>', '=]', '8)', '=)', ':}',
     ':^)', ':-D', ':D', '8-D', '8D', 'x-D', 'xD', 'X-D', 'XD', '=-D', '=D',
@@ -46,7 +49,6 @@ def preprocess_tweet(tweet):
     7. remove non-ascii
     8. remove emoticons
 
-    https://github.com/MalavikaSrikanth16/adversarial-learning-for-stance/blob/main/src/preprocessing/twitter_preprocessing.py
     """
     # remove URLs
     tweet = re.sub('((www\.[^\s]+)|(https?://[^\s]+)|(http?://[^\s]+))', 'http', tweet)
@@ -68,7 +70,7 @@ def preprocess_tweet(tweet):
     #Remove stopwords and emoticons from final word list
     # stop_words = set(stopwords.words('english'))
     tweet = ' '.join([w for w in word_tokenize(tweet) if w not in EMOTICONS])
-    
+
     return tweet
 
 def preprocess(corpus):

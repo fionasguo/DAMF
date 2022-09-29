@@ -5,6 +5,8 @@ Define modules used in the model: feedforward, reconstruction, transformation.
 import torch
 from torch.autograd import Function
 
+from utils import count_devices
+
 ########### Feed Forward Classifier ###########
 
 class FFClassifier(torch.nn.Module):
@@ -66,8 +68,9 @@ class ReconstructionLoss(torch.nn.Module):
 
         self.tanh = torch.nn.Tanh()
 
-    def forward(self, orig_embed, rec_embed, seq_len):
+    def forward(self, orig_embed, rec_embed):
         # embed: (batch_size, seq_len, embed_dim)
+        seq_len = orig_embed.shape[1]
         tmp = torch.norm(rec_embed - self.tanh(orig_embed), dim=2) ** 2 # (batch_size, seq_len)
         loss = tmp.sum(1) / seq_len
         return loss.mean()
@@ -105,15 +108,15 @@ class TransformationLoss(torch.nn.Module):
 
     def forward(self, W):
         # if multiple gpu, W is concatenated together - need to check size first
-        n_gpus = torch.cuda.device_count()
+        n_devices = count_devices()
 
-        W_blocks = torch.split(W, n_gpus, 0)
+        W_blocks = torch.split(W, n_devices, 0)
 
         loss = torch.tensor(0.0,dtype=torch.float).to(self.device)
 
         for w in W_blocks:
             loss += torch.norm(w - self.eye) ** 2
 
-        loss /= n_gpus
+        loss /= n_devices
 
         return loss

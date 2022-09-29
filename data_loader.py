@@ -39,7 +39,7 @@ class MFData(Dataset):
 
         if self.feat_embed is not None:
             item['feat_embed'] = torch.tensor(
-                self.feat_embed[idx], dtype=torch.float, requires_grad=False)
+                self.feat_embed[idx], dtype=torch.float)
 
         return item, idx
 
