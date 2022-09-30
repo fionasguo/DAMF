@@ -254,7 +254,7 @@ if __name__ == '__main__':
                 # plot feature embedding heapmaps and tsne for domain adapt cases
                 if 's_val' in datasets:
                     logging.info('performing feature embedding analysis')
-                    feature_embedding_analysis(datasets['s_val'],datasets['t_val'],args['batch_size'],fig_save_path=args['output_path'],model_path=args['output_path']+'/best_model.pth')
+                    feature_embedding_analysis(datasets['s_val'],datasets['t_val'],fig_save_path=args['output_path'],args['batch_size'],model_path=args['output_path']+'/best_model.pth')
             except:
                 pass
 
@@ -265,6 +265,6 @@ if __name__ == '__main__':
                 # plot feature embedding heapmaps and tsne for domain adapt cases
                 if 's_val' in datasets:
                     logging.info('performing feature embedding analysis')
-                    feature_embedding_analysis(datasets['s_val'],datasets['t_val'],args['batch_size'],fig_save_path=args['output_path'],model_path=args['mf_model_path'])
+                    feature_embedding_analysis(datasets['s_val'],datasets['t_val'],fig_save_path=args['output_path'],args['batch_size'],model_path=args['mf_model_path'])
 
             logging.info(f"Finished evaluating test data {args['test_domain']}. Time: {time.time()-start_time}")

@@ -21,7 +21,8 @@ import torch.utils.data
 from data_loader import MFData
 from modules import ReconstructionLoss, TransformationLoss
 from model import MFBasic, MFDomainAdapt
-from evaluate import evaluate, compute_feat
+from evaluate import evaluate
+from feature_analysis import compute_feat
 from utils import get_gpu_memory_map, count_devices
 
 
@@ -112,7 +113,7 @@ class DomainAdaptTrainer:
 
         self.scheduler = LambdaLR(self.optimizer, lr_lambda)
 
-        self.optimizer_to(self.optimizer, self.args['device'])
+        # self.optimizer_to(self.optimizer, self.args['device'])
 
     def update_lambda_domain(self, epoch, i_dataloader):
         """
@@ -137,21 +138,21 @@ class DomainAdaptTrainer:
         else:
             return 0.0
 
-    def optimizer_to(self, optim, device):
-        """Move optimizer to device"""
-        for param in optim.state.values():
-            # Not sure there are any global tensors in the state dict
-            if isinstance(param, torch.Tensor):
-                param.data = param.data.to(device)
-                if param._grad is not None:
-                    param._grad.data = param._grad.data.to(device)
-            elif isinstance(param, dict):
-                for subparam in param.values():
-                    if isinstance(subparam, torch.Tensor):
-                        subparam.data = subparam.data.to(device)
-                        if subparam._grad is not None:
-                            subparam._grad.data = subparam._grad.data.to(
-                                device)
+    # def optimizer_to(self, optim, device):
+    #     """Move optimizer to device"""
+    #     for param in optim.state.values():
+    #         # Not sure there are any global tensors in the state dict
+    #         if isinstance(param, torch.Tensor):
+    #             param.data = param.data.to(device)
+    #             if param._grad is not None:
+    #                 param._grad.data = param._grad.data.to(device)
+    #         elif isinstance(param, dict):
+    #             for subparam in param.values():
+    #                 if isinstance(subparam, torch.Tensor):
+    #                     subparam.data = subparam.data.to(device)
+    #                     if subparam._grad is not None:
+    #                         subparam._grad.data = subparam._grad.data.to(
+    #                             device)
 
     def print_loss(self, loss):
         """Convert loss (if it's a tensor) to a scalar"""
@@ -319,13 +320,13 @@ class DomainAdaptTrainer:
             if self.args['reconstruction'] and epoch == (self.args['num_no_adv'] - 1):
                 # compute feature embeddings and save in the dataset object
                 compute_feat(
-                    self.model, self.datasets['train'], self.args['batch_size'], self.args['device'])
+                    self.model, self.datasets['train'], self.args['device'], self.args['batch_size'])
 
             # update lr scheduler
             self.scheduler.step()
 
-            if self.args['device'] != 'cpu':
-                logging.debug('GPU usage (MB): ', get_gpu_memory_map())
+            # log cpu/gpu usage
+            logging.info('GPU/CPU usage (MB): ', get_gpu_memory_map())
 
         logging.info('============ Training Summary ============= \n')
         logging.info(
@@ -477,14 +478,15 @@ class DomainAdaptTrainer:
             if self.args['reconstruction'] and epoch == (self.args['num_no_adv'] - 1):
                 # compute feature embeddings and save in the dataset object
                 compute_feat(
-                    self.model, self.datasets['s_train'], self.args['batch_size'], self.args['device'])
+                    self.model, self.datasets['s_train'], self.args['device'], self.args['batch_size'])
                 compute_feat(
-                    self.model, self.datasets['t_train'], self.args['batch_size'], self.args['device'])
+                    self.model, self.datasets['t_train'], self.args['device'], self.args['batch_size'])
 
             # update lr scheduler
             self.scheduler.step()
 
-            logging.debug(get_gpu_memory_map())
+            # log cpu/gpu usage
+            logging.info('GPU/CPU usage (MB): ', get_gpu_memory_map())
 
         logging.info('============ Training Summary ============= \n')
         logging.info('Best Macro F1 of the %s VAL dataset: %f' %

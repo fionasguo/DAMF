@@ -1,3 +1,7 @@
+"""
+Functions for inference - predict and evaluate
+"""
+
 import os
 import torch.backends.cudnn as cudnn
 import torch
@@ -8,11 +12,33 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import logging
+from typing import Tuple, List
 
 from model import MFBasic, MFDomainAdapt
+from data_loader import MFData
 
 
-def predict(model, dataset, batch_size, device, domain_adapt=True, is_adv=True):
+def predict(
+        model: torch.nn.Module,
+        dataset: MFData,
+        device: str,
+        batch_size: int = 64,
+        domain_adapt: bool = True,
+        is_adv: bool = True) -> Tuple[List, List, List, List]:
+    """
+    Predict MF and/or domain labels based on given model.
+
+    Args:
+        model: MFBasic or MFDomainAdapt
+        dataset: test data, an MFData instance
+        device: cpu or gpu
+        batch_size: default is 64
+        domain_adapt: whether using basic or domain adapt model
+        is_adv: if doing adv training, will pass it to model forward fn and predict domain labels
+    Returns:
+        mf_preds, mf_labels: moral foundation predictions and true labels
+        domain_preds, domain_labels: domain predictions and true labels
+    """
     model.eval()
 
     dataloader = DataLoader(
@@ -28,7 +54,6 @@ def predict(model, dataset, batch_size, device, domain_adapt=True, is_adv=True):
     domain_labels = []
 
     while i < len_dataloader:
-        # test model using target data
         data_target, _ = data_target_iter.next()
         for k, v in data_target.items():
             data_target[k] = data_target[k].to(device)
@@ -57,15 +82,37 @@ def predict(model, dataset, batch_size, device, domain_adapt=True, is_adv=True):
     return mf_preds, mf_labels, domain_preds, domain_labels
 
 
-def evaluate(dataset, batch_size, model=None, model_path=None, domain_adapt=True, is_adv=True, test=False):
+def evaluate(
+        dataset: MFData,
+        batch_size: int = 64,
+        model: torch.nn.Module = None,
+        model_path: str = None,
+        is_adv: bool = True,
+        test: bool = False) -> float:
+    """
+    Evalute test data and print F1 scores.
+
+    Args:
+        dataset: test data, an MFData instance
+        batch_size: default is 64
+        model: MFBasic or MFDomainAdapt instance, either model or model path should be given
+        model_path: if no model instance is given, will load model from this path
+        is_adv: if doing adv training, will pass it to model forward fn and predict domain labels
+        test: whether in training or test mode
+
+    Returns:
+        f1 score
+        also print detailed classification report to log file.
+    """
     if test:
         logger = logging.getLogger(__name__)
+        orig_level = logger.level
         logger.setLevel(logging.DEBUG)
 
     device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
     assert (model != None or model_path !=
-            None), 'Provide a model object or a model path.'
+            None), 'Provide a model instance or a model path.'
     if model == None:
         model = torch.load(model_path, map_location=torch.device(device))
 
@@ -75,10 +122,14 @@ def evaluate(dataset, batch_size, model=None, model_path=None, domain_adapt=True
     except:
         model = model.to(device)
 
-    mf_preds, mf_labels, domain_preds, domain_labels = predict(
-        model, dataset, batch_size, device, domain_adapt, is_adv)
+    # check whether if the model is domain adapt model
+    domain_adapt = (isinstance(model, MFDomainAdapt))
 
-    # print
+    # predict
+    mf_preds, mf_labels, domain_preds, domain_labels = predict(
+        model, dataset, device, batch_size, domain_adapt, is_adv)
+
+    # print reports
     mf_report = metrics.classification_report(
         mf_labels, mf_preds, zero_division=0)
     logging.debug('MF classification report:')
@@ -99,108 +150,8 @@ def evaluate(dataset, batch_size, model=None, model_path=None, domain_adapt=True
         logging.debug('Domain classification confusion matrix:')
         logging.debug(conf_matrix)
 
+    # set logging level back to original
+    if test:
+        logger.setLevel(orig_level)
+
     return macro_f1
-
-################################ feature embedding analysis ##################################
-
-
-def compute_feat(model, dataset, batch_size, device):
-    # get feature embeddings
-    dataloader = DataLoader(
-        dataset=dataset, batch_size=batch_size, shuffle=False)
-
-    len_dataloader = len(dataloader)
-    data_iter = iter(dataloader)
-
-    model.eval()
-
-    i = 0
-
-    feats = []
-    last_hidden_states = []
-    domain_labels = []
-
-    while i < len_dataloader:
-        data, _ = data_iter.next()
-        for k, v in data.items():
-            data[k] = data[k].to(device)
-
-        with torch.no_grad():
-            try:
-                last_hidden_state, feat = model.module.gen_feature_embeddings(
-                    data['input_ids'], data['attention_mask'])
-            except:
-                last_hidden_state, feat = model.gen_feature_embeddings(
-                    data['input_ids'], data['attention_mask'])
-
-        feat = feat.detach()
-        feats.extend(feat.data.tolist())
-
-        last_hidden_state = last_hidden_state.detach()
-        last_hidden_states.extend(last_hidden_state.to('cpu').tolist())
-
-        domain_labels.extend(data['domain_labels'].tolist())
-
-        i += 1
-
-    dataset.feat_embed = last_hidden_states
-
-    return feats, domain_labels
-
-
-def plot_heatmap(feats, domain_labels, fig_save_path):
-    # heat map
-    plt.figure(figsize=[10, 8])
-    fig = sns.heatmap(feats, yticklabels=domain_labels).get_figure()
-
-    fig.savefig(fig_save_path + '/heatmap.png', format='png')
-
-
-def plot_tsne(feats, domain_labels, fig_save_path):
-
-    tsne = TSNE(n_components=2, verbose=0, perplexity=40, n_iter=300)
-    tsne_results = tsne.fit_transform(feats)
-
-    plt.figure(figsize=(8, 8))
-    plt.xlim((-40, 40))
-    plt.ylim((-40, 40))
-    fig = sns.scatterplot(
-        x=tsne_results[:, 0], y=tsne_results[:, 1],
-        hue=domain_labels,
-        palette=sns.color_palette("hls", len(np.unique(domain_labels))),
-        legend="full",
-        alpha=0.3
-    ).get_figure()
-
-    fig.savefig(fig_save_path + '/tsne.png', format='png')
-
-
-def feature_embedding_analysis(source_dataset, target_dataset, batch_size, fig_save_path, model=None, model_path=None):
-
-    device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
-
-    assert (model != None or model_path !=
-            None), 'Provide a model object or a model path.'
-    if model == None:
-        model = torch.load(model_path, map_location=torch.device(device))
-
-    model = model.eval()
-
-    model = model.to(device)
-
-    # get feature embeddings of source and target data from the best model (adv model)
-    s_feats, s_domain_labels = compute_feat(
-        model, source_dataset, batch_size, device)
-    t_feats, t_domain_labels = compute_feat(
-        model, target_dataset, batch_size, device)
-
-    s_feats.extend(t_feats)
-    s_domain_labels.extend(t_domain_labels)
-    feats = np.array(s_feats)
-    domain_labels = np.array(s_domain_labels).squeeze()
-
-    np.savetxt(fig_save_path + '/feat_embeddings.tsv', feats)
-    np.savetxt(fig_save_path + '/domain_labels.tsv', domain_labels)
-
-    plot_heatmap(feats, domain_labels, fig_save_path)
-    plot_tsne(feats, domain_labels, fig_save_path)
