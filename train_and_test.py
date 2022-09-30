@@ -65,7 +65,7 @@ if __name__ == '__main__':
     datasets = load_data(args['data_dir'], args['pretrained_path'],
                          args['n_mf_classes'], args['train_domain'],
                          args['test_domain'], args['semi_supervised'],
-                         args['seed'])
+                         seed=args['seed'])
 
     logging.info(f'Finished processing data. Time: {time.time()-start_time}')
 
