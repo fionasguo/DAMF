@@ -66,13 +66,20 @@ def predict(model: torch.nn.Module,
         mf_pred_confidence = torch.sigmoid(outputs['class_output'])
         mf_pred = ((mf_pred_confidence) >= 0.5).long()
         mf_preds.extend(mf_pred.to('cpu').tolist())
-        mf_labels.extend(data_target['mf_labels'].to('cpu').tolist())
+        # in case no label available
+        try:
+            mf_labels.extend(data_target['mf_labels'].to('cpu').tolist())
+        except:
+            pass
 
         if domain_adapt and is_adv:
             domain_pred = outputs['domain_output'].data.max(1, keepdim=True)[1]
             domain_preds.extend(domain_pred.to('cpu').tolist())
-            domain_labels.extend(
+            try:
+                domain_labels.extend(
                 data_target['domain_labels'].to('cpu').tolist())
+            except:
+                pass
 
         i += 1
 
