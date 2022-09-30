@@ -49,7 +49,7 @@ if __name__ == '__main__':
         logfilename = datetime.now().strftime("%Y%m%d%H%M%S")
     logging.basicConfig(filename=logfilename + '.log',
                         format="%(message)s",
-                        level=logging.INFO)
+                        level=logging.DEBUG)
 
     # args
     mode, args = read_args()

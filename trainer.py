@@ -56,6 +56,8 @@ class DomainAdaptTrainer:
                                  self.args['dropout_rate'])
             self.create_optimizer_and_scheduler_basic()
 
+        self.model_embedding_dim = self.model.embedding_dim
+
         if torch.cuda.device_count() > 1:
             self.model = torch.nn.DataParallel(self.model)
 
@@ -105,8 +107,6 @@ class DomainAdaptTrainer:
             return decay_factor
 
         self.scheduler = LambdaLR(self.optimizer, lr_lambda)
-
-        # self.optimizer_to(self.optimizer, self.args['device'])
 
     def update_lambda_domain(self, epoch, i_dataloader):
         """
@@ -158,22 +158,6 @@ class DomainAdaptTrainer:
             len(self.datasets['s_train']), s_train_batch_size, len(self.datasets['t_train']), t_train_batch_size))
 
         return s_train_batch_size, t_train_batch_size
-
-    # def optimizer_to(self, optim, device):
-    #     """Move optimizer to device"""
-    #     for param in optim.state.values():
-    #         # Not sure there are any global tensors in the state dict
-    #         if isinstance(param, torch.Tensor):
-    #             param.data = param.data.to(device)
-    #             if param._grad is not None:
-    #                 param._grad.data = param._grad.data.to(device)
-    #         elif isinstance(param, dict):
-    #             for subparam in param.values():
-    #                 if isinstance(subparam, torch.Tensor):
-    #                     subparam.data = subparam.data.to(device)
-    #                     if subparam._grad is not None:
-    #                         subparam._grad.data = subparam._grad.data.to(
-    #                             device)
 
     def print_loss(self, loss):
         """Convert loss (if it's a tensor) to a scalar"""
@@ -274,7 +258,7 @@ class DomainAdaptTrainer:
         if self.args['domain_adapt']:
             self.loss_fn_domain = torch.nn.CrossEntropyLoss().to(
                 self.args['device'])
-            self.loss_fn_trans = TransformationLoss(self.model.embedding_dim, self.args['device']).to(
+            self.loss_fn_trans = TransformationLoss(self.model_embedding_dim, self.args['device']).to(
                 self.args['device']) if self.args['transformation'] else None
             self.loss_fn_rec = ReconstructionLoss().to(
                 self.args['device']) if self.args['reconstruction'] else None
@@ -345,7 +329,8 @@ class DomainAdaptTrainer:
             self.scheduler.step()
 
             # log cpu/gpu usage
-            logging.info('GPU/CPU usage (MB): ', get_gpu_memory_map())
+            device_info = get_gpu_memory_map()
+            logging.info('GPU/CPU usage (MB): %s' % device_info)
 
         logging.info('============ Training Summary ============= \n')
         logging.info(
@@ -378,7 +363,7 @@ class DomainAdaptTrainer:
             pos_weight=self.compute_weights()).to(self.args['device'])
         self.loss_fn_domain = torch.nn.CrossEntropyLoss().to(
             self.args['device'])
-        self.loss_fn_trans = TransformationLoss(self.model.embedding_dim, self.args['device']).to(
+        self.loss_fn_trans = TransformationLoss(self.model_embedding_dim, self.args['device']).to(
             self.args['device']) if self.args['transformation'] else None
         self.loss_fn_rec = ReconstructionLoss().to(
             self.args['device']) if self.args['reconstruction'] else None
@@ -476,7 +461,7 @@ class DomainAdaptTrainer:
 
             # log cpu/gpu usage
             device_info = get_gpu_memory_map()
-            logging.info('GPU/CPU usage (MB): ', str(device_info))
+            logging.info('GPU/CPU usage (MB): %s' % device_info)
 
         logging.info('============ Training Summary ============= \n')
         logging.info('Best Macro F1 of the %s VAL dataset: %f' %
