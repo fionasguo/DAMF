@@ -14,7 +14,8 @@ from torch.utils.data import DataLoader
 from data_loader import MFData
 from modules import ReconstructionLoss, TransformationLoss
 from model import MFBasic, MFDomainAdapt
-from evaluate import evaluatefrom feature_analysis import compute_feat
+from evaluate import evaluate
+from feature_analysis import compute_feat
 from utils import get_gpu_memory_map, count_devices
 
 

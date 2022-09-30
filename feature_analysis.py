@@ -132,10 +132,8 @@ def feature_embedding_analysis(source_dataset: MFData,
     model = model.to(device)
 
     # get feature embeddings of source and target data from the best model (adv model)
-    s_feats, s_domain_labels = compute_feat(model, source_dataset, batch_size,
-                                            device)
-    t_feats, t_domain_labels = compute_feat(model, target_dataset, batch_size,
-                                            device)
+    s_feats, s_domain_labels = compute_feat(model, source_dataset, device, batch_size)
+    t_feats, t_domain_labels = compute_feat(model, target_dataset, device, batch_size)
 
     s_feats.extend(t_feats)
     s_domain_labels.extend(t_domain_labels)

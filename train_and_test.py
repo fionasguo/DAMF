@@ -36,6 +36,7 @@ import transformers
 from generate_datasets import load_data
 from trainer import DomainAdaptTrainer
 from evaluate import evaluate
+from feature_analysis import feature_embedding_analysis
 from utils import read_args, set_seed
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -99,7 +100,7 @@ if __name__ == '__main__':
         test_accu = evaluate(datasets['test'],
                              args['batch_size'],
                              model_path=eval_model_path,
-                             domain_adapt=args['domain_adapt'],
+                             is_adv=args['domain_adapt'],
                              test=True)
         logging.info('Macro F1 of the %s TEST dataset: %f' %
                      ('target', test_accu))
