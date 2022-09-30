@@ -1,0 +1,10 @@
+nltk
+emoji
+pandas
+typing
+transformers
+torch
+numpy
+sklearn
+seaborn
+psutil

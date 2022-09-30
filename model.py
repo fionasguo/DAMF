@@ -4,9 +4,10 @@ Define 2 MF inference models - basic (eg vanilla bert) and domain adapt model.
 
 from modules import FFClassifier, Reconstruction, Transformation
 import torch
-from grad_rev_fn import ReverseLayerF
 import transformers
 from transformers import AutoModel, AutoConfig
+
+from grad_rev_fn import ReverseLayerF
 
 transformers.logging.set_verbosity_error()
 
