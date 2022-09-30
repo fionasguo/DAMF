@@ -131,6 +131,34 @@ class DomainAdaptTrainer:
         else:
             return 0.0
 
+    def compute_batch_size(self):
+        """
+        Compute batch size of source and target data balanced between each domain.
+
+        Because source and target data can contain different numbers of domains, we should balance the batch size in each iteration of training:
+        s_train_batch_size ~ user_defined_batch_size
+        t_train_batch_size ~ size_of_t_train / size_of_s_train * user_defined_batch_size
+
+        Because maybe we are runing on multiple gpus, need to make sure each gpu gets the same amount.
+        """
+        # number of devices
+        n_devices = count_devices()
+        # t_train batch size portioned according to the size of t_train and s_train. dividing, rounding and multiplying by n_devices to make sure each device gets the same amount data
+        t_train_batch_size = round(self.args['batch_size'] * len(
+            self.datasets['t_train']) / len(self.datasets['s_train']) / n_devices) * n_devices
+        # in case t_train batch size is too small
+        if t_train_batch_size <= n_devices:
+            t_train_batch_size = 2 * n_gpus
+            s_train_batch_size = math.ceil(len(
+                self.datasets['s_train']) / (len(self.datasets['t_train']) // t_train_batch_size))
+        else:
+            s_train_batch_size = self.args['batch_size']
+
+        logging.debug('s_train size: %d, s_train batch size: %d, t_train size: %d, t_train batch size: %d' % (
+            len(self.datasets['s_train']), s_train_batch_size, len(self.datasets['t_train']), t_train_batch_size))
+
+        return s_train_batch_size, t_train_batch_size
+
     # def optimizer_to(self, optim, device):
     #     """Move optimizer to device"""
     #     for param in optim.state.values():
@@ -210,13 +238,12 @@ class DomainAdaptTrainer:
         loss_rec = 0.0
         if self.args['reconstruction'] and is_adv:
             # when training adversarially, compute loss between original and current feature embeddings
-            #s_orig_embed,_ = self.basic_model.gen_feature_embeddings(data_source['input_ids'],data_source['attention_mask'])
             loss_rec = self.args['lambda_rec'] * self.loss_fn_rec(
                 data['feat_embed'], outputs['rec_embed'])
             loss += loss_rec
-        # trans loss
+        # trans loss - don't need this for target data
         loss_trans = 0.0
-        if self.args['transformation'] and is_adv:
+        if self.args['transformation'] and is_adv and mf_loss:
             loss_trans = self.args['lambda_trans'] * \
                 self.loss_fn_trans(outputs['trans_W'])
             loss += loss_trans
@@ -327,34 +354,6 @@ class DomainAdaptTrainer:
                      self.args['output_path'] + '/best_model.pth')
 
         return best_accu
-
-    def compute_batch_size(self):
-        """
-        Compute batch size of source and target data balanced between each domain.
-
-        Because source and target data can contain different numbers of domains, we should balance the batch size in each iteration of training:
-        s_train_batch_size ~ user_defined_batch_size
-        t_train_batch_size ~ size_of_t_train / size_of_s_train * user_defined_batch_size
-
-        Because maybe we are runing on multiple gpus, need to make sure each gpu gets the same amount.
-        """
-        # number of devices
-        n_devices = count_devices()
-        # t_train batch size portioned according to the size of t_train and s_train. dividing, rounding and multiplying by n_devices to make sure each device gets the same amount data
-        t_train_batch_size = round(self.args['batch_size'] * len(
-            self.datasets['t_train']) / len(self.datasets['s_train']) / n_devices) * n_devices
-        # in case t_train batch size is too small
-        if t_train_batch_size <= n_devices:
-            t_train_batch_size = 2 * n_gpus
-            s_train_batch_size = math.ceil(len(
-                self.datasets['s_train']) / (len(self.datasets['t_train']) // t_train_batch_size))
-        else:
-            s_train_batch_size = self.args['batch_size']
-
-        logging.debug('s_train size: %d, s_train batch size: %d, t_train size: %d, t_train batch size: %d' % (
-            len(self.datasets['s_train']), s_train_batch_size, len(self.datasets['t_train']), t_train_batch_size))
-
-        return s_train_batch_size, t_train_batch_size
 
     def train_semisupervised(self):
         """if training with semi-supervised method, we are surely doing domain adversarial training"""
@@ -476,7 +475,8 @@ class DomainAdaptTrainer:
             self.scheduler.step()
 
             # log cpu/gpu usage
-            logging.info('GPU/CPU usage (MB): ', get_gpu_memory_map())
+            device_info = get_gpu_memory_map()
+            logging.info('GPU/CPU usage (MB): ', str(device_info))
 
         logging.info('============ Training Summary ============= \n')
         logging.info('Best Macro F1 of the %s VAL dataset: %f' %

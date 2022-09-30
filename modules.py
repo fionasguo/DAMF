@@ -112,6 +112,7 @@ class TransformationLoss(torch.nn.Module):
         super(TransformationLoss, self).__init__()
 
         self.device = device
+        self.dim = dim
 
         self.eye = torch.eye(dim, requires_grad=False).to(device)
 
@@ -119,7 +120,7 @@ class TransformationLoss(torch.nn.Module):
         # if multiple gpu, W is concatenated together - need to check size first
         n_devices = count_devices()
 
-        W_blocks = torch.split(W, n_devices, 0)
+        W_blocks = torch.split(W, self.dim, 0)
 
         loss = torch.tensor(0.0, dtype=torch.float).to(self.device)
 

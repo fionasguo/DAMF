@@ -153,6 +153,26 @@ def gen_semi_supervised(train: pd.DataFrame,
         'test': true_test_data
     }
 
+def create_MFData(
+        df: pd.DataFrame,
+        tokenizer: AutoTokenizer,
+        mf_label_names: List[str],
+        max_seq_len: int = 50) -> MFData:
+    """
+    Create MFData instance from a df.
+    """
+    encodings = df['text'].apply(tokenizer,
+                                truncation=True,
+                                max_length=max_seq_len,
+                                padding="max_length").tolist()
+
+    mf_labels = df[mf_label_names].values
+
+    domain_labels = df['domain_idx'].values
+
+    mf_data = MFData(encodings, mf_labels, domain_labels)
+
+    return mf_data
 
 def load_data(data_dir: str,
               tokenizer_path: str,
@@ -233,16 +253,6 @@ def load_data(data_dir: str,
     # encode the text and take the labels
     datasets = {}
     for k, v in dataset_dict.items():
-        # encode the text
-        encodings = v['text'].apply(tokenizer,
-                                    truncation=True,
-                                    max_length=max_seq_len,
-                                    padding="max_length").tolist()[:20]
-
-        mf_labels = v[mf_label_names].values[:20]
-
-        domain_labels = v['domain_idx'].values[:20]
-
-        datasets[k] = MFData(encodings, mf_labels, domain_labels)
+        datasets[k] = create_MFData(v, tokenizer, mf_label_names, max_seq_len)
 
     return datasets
