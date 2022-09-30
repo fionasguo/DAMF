@@ -75,11 +75,8 @@ def predict(model: torch.nn.Module,
         if domain_adapt and is_adv:
             domain_pred = outputs['domain_output'].data.max(1, keepdim=True)[1]
             domain_preds.extend(domain_pred.to('cpu').tolist())
-            try:
-                domain_labels.extend(
+            domain_labels.extend(
                 data_target['domain_labels'].to('cpu').tolist())
-            except:
-                pass
 
         i += 1
 
