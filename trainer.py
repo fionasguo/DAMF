@@ -2,21 +2,14 @@
 Trainer class for basic and domain adapt models
 """
 
-import random
-import os
-import sys
-import subprocess
-import copy
 import numpy as np
 import math
-import subprocess
 import logging
 
-import torch.backends.cudnn as cudnn
 import torch
 import torch.optim as optim
 from torch.optim.lr_scheduler import LambdaLR
-import torch.utils.data
+from torch.utils.data import DataLoader
 
 from data_loader import MFData
 from modules import ReconstructionLoss, TransformationLoss
@@ -306,8 +299,7 @@ class DomainAdaptTrainer:
                     self.model, self.args['output_path'] + '/model_in_training.pth')
 
             # test on validation set
-            accu = evaluate(self.datasets['val'], self.args['batch_size'],
-                            model=self.model, domain_adapt=self.args['domain_adapt'], is_adv=is_adv)
+            accu = evaluate(self.datasets['val'], self.args['batch_size'], model=self.model, is_adv=is_adv)
             logging.info(f'\nepoch: {epoch}')
             logging.info('Macro F1 of the VAL dataset: %.3f' % accu)
 
@@ -459,10 +451,8 @@ class DomainAdaptTrainer:
                     self.model, self.args['output_path'] + '/model_in_training.pth')
 
             # test on validation set
-            accu_s = evaluate(self.datasets['s_val'], self.args['batch_size'],
-                              model=self.model, domain_adapt=True, is_adv=is_adv)
-            accu_t = evaluate(self.datasets['t_val'], self.args['batch_size'],
-                              model=self.model, domain_adapt=True, is_adv=is_adv)
+            accu_s = evaluate(self.datasets['s_val'], self.args['batch_size'], model=self.model, is_adv=is_adv)
+            accu_t = evaluate(self.datasets['t_val'], self.args['batch_size'], model=self.model, is_adv=is_adv)
             logging.info(f'\nepoch: {epoch}')
             logging.info('Macro F1 of the %s dataset: %f' % ('source', accu_s))
             logging.info('Macro F1 of the %s dataset: %f\n' %

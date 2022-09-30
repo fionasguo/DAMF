@@ -5,8 +5,6 @@ The data csv needs to have these columns: 'text','domain' and all columns in des
 """
 
 import pandas as pd
-import numpy as np
-from ast import literal_eval
 from typing import List, Tuple, Dict
 
 from preprocessing import preprocess_tweet

@@ -4,7 +4,6 @@ Define 2 MF inference models - basic (eg vanilla bert) and domain adapt model.
 
 from modules import FFClassifier, Reconstruction, Transformation
 import torch
-import torch.nn as nn
 from grad_rev_fn import ReverseLayerF
 import transformers
 from transformers import AutoModel, AutoConfig
@@ -12,7 +11,7 @@ from transformers import AutoModel, AutoConfig
 transformers.logging.set_verbosity_error()
 
 
-class MFBasic(nn.Module):
+class MFBasic(torch.nn.Module):
     """
     Model for moral foundation prediction by simply finetuning a pretrained model.
 
@@ -59,7 +58,7 @@ class MFBasic(nn.Module):
         return last_hidden_state, pooler_output
 
 
-class MFDomainAdapt(nn.Module):
+class MFDomainAdapt(torch.nn.Module):
     """
     Model for moral foundation prediction with domain adversarial training.
 
@@ -151,7 +150,7 @@ class MFDomainAdapt(nn.Module):
             pooler_output, trans_W = self.trans_module(pooler_output)
 
         # concat domain features onto pretrained LM embeddings before sending to MF classifier
-        domain_feature = nn.functional.one_hot(
+        domain_feature = torch.nn.functional.one_hot(
             domain_labels, num_classes=self.n_domain_classes).squeeze(1)
         class_input = torch.cat((pooler_output, domain_feature), dim=1)
 

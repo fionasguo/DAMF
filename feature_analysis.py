@@ -2,13 +2,10 @@
 Functions for inference - predict and evaluate
 """
 
-import os
-import torch.backends.cudnn as cudnn
+import numpy as np
 import torch
 from torch.utils.data import DataLoader
-from sklearn import metrics
 from sklearn.manifold import TSNE
-import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import logging
