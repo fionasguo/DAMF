@@ -9,16 +9,18 @@ from nltk import word_tokenize
 # nltk.download('punkt')
 from emoji import demojize
 
-
-EMOTICONS = set([':-)', ':)', ';)', ':o)', ':]', ':3', ':c)', ':>', '=]', '8)', '=)', ':}',
+EMOTICONS = set([
+    ':-)', ':)', ';)', ':o)', ':]', ':3', ':c)', ':>', '=]', '8)', '=)', ':}',
     ':^)', ':-D', ':D', '8-D', '8D', 'x-D', 'xD', 'X-D', 'XD', '=-D', '=D',
     '=-3', '=3', ':-))', ":'-)", ":')", ':*', ':^*', '>:P', ':-P', ':P', 'X-P',
-    'x-p', 'xp', 'XP', ':-p', ':p', '=p', ':-b', ':b', '>:)', '>;)', '>:-)','<3',
-    ':L', ':-/', '>:/', ':S', '>:[', ':@', ':-(', ':[', ':-||', '=L', ':<',
-    ':-[', ':-<', '=\\', '=/', '>:(', ':(', '>.<', ":'-(", ":'(", ':\\', ':-c',
-    ':c', ':{', '>:\\', ';('])
+    'x-p', 'xp', 'XP', ':-p', ':p', '=p', ':-b', ':b', '>:)', '>;)', '>:-)',
+    '<3', ':L', ':-/', '>:/', ':S', '>:[', ':@', ':-(', ':[', ':-||', '=L',
+    ':<', ':-[', ':-<', '=\\', '=/', '>:(', ':(', '>.<', ":'-(", ":'(", ':\\',
+    ':-c', ':c', ':{', '>:\\', ';('
+])
 
-PUNCT = set(string.punctuation+'@')
+PUNCT = set(string.punctuation + '@')
+
 
 def split_hashtag(tweet):
     '''
@@ -29,12 +31,14 @@ def split_hashtag(tweet):
     for i in range(len(tweet_toks)):
         if tweet_toks[i].startswith("#"):
             hashtag = tweet_toks[i][1:]
-            split_hashtag = re.findall('[0-9]+|[A-Z][a-z]+|[A-Z][A-Z]+|[a-z]+', hashtag)
+            split_hashtag = re.findall('[0-9]+|[A-Z][a-z]+|[A-Z][A-Z]+|[a-z]+',
+                                       hashtag)
             final_tweet_toks.extend(split_hashtag)
         else:
             final_tweet_toks.append(tweet_toks[i])
     tweet = " ".join(final_tweet_toks)
     return tweet
+
 
 def preprocess_tweet(tweet):
     """
@@ -50,14 +54,15 @@ def preprocess_tweet(tweet):
 
     """
     # remove URLs
-    tweet = re.sub('((www\.[^\s]+)|(https?://[^\s]+)|(http?://[^\s]+))', 'http', tweet)
+    tweet = re.sub('((www\.[^\s]+)|(https?://[^\s]+)|(http?://[^\s]+))',
+                   'http', tweet)
     tweet = re.sub(r'http\S+', 'http', tweet)
     # remove usernames
     tweet = re.sub('@[^\s]+', '@user', tweet)
     # remove the # in hashtag and split hashtags
     # tweet = split_hashtag(tweet)
     # remove hashtags
-    tweet = re.sub('#[^\s]+','',tweet)
+    tweet = re.sub('#[^\s]+', '', tweet)
     # emojis to description
     tweet = demojize(tweet)
     # convert text to lower-case
@@ -71,6 +76,7 @@ def preprocess_tweet(tweet):
     tweet = ' '.join([w for w in word_tokenize(tweet) if w not in EMOTICONS])
 
     return tweet
+
 
 def preprocess(corpus):
     """

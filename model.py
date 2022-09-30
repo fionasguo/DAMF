@@ -21,9 +21,7 @@ class MFBasic(torch.nn.Module):
         mf_classifier: the prediction layer in the end
     """
 
-    def __init__(self,
-                 pretrained_path: str,
-                 n_mf_classes: int,
+    def __init__(self, pretrained_path: str, n_mf_classes: int,
                  dropout_rate: float):
         """
         Args:
@@ -37,8 +35,9 @@ class MFBasic(torch.nn.Module):
 
         self.embedding_dim = self.feature.embeddings.word_embeddings.embedding_dim
 
-        self.mf_classifier = FFClassifier(
-            self.embedding_dim, 100, n_mf_classes, dropout_rate)  # hidden_dim = 100
+        self.mf_classifier = FFClassifier(self.embedding_dim, 100,
+                                          n_mf_classes,
+                                          dropout_rate)  # hidden_dim = 100
 
     def forward(self, input_ids, att_mask):
 
@@ -100,17 +99,19 @@ class MFDomainAdapt(torch.nn.Module):
         self.feature = AutoModel.from_pretrained(pretrained_path)
         self.embedding_dim = self.feature.embeddings.word_embeddings.embedding_dim
 
-        self.rec_module = Reconstruction(
-            self.embedding_dim, device) if self.has_rec else None
+        self.rec_module = Reconstruction(self.embedding_dim,
+                                         device) if self.has_rec else None
 
-        self.trans_module = Transformation(
-            self.embedding_dim, device) if self.has_trans else None
+        self.trans_module = Transformation(self.embedding_dim,
+                                           device) if self.has_trans else None
 
         self.mf_classifier = FFClassifier(
-            self.embedding_dim + self.n_domain_classes, 100, self.n_mf_classes, dropout_rate)  # hidden_dim = 100
+            self.embedding_dim + self.n_domain_classes, 100, self.n_mf_classes,
+            dropout_rate)  # hidden_dim = 100
 
-        self.domain_classifier = FFClassifier(
-            self.embedding_dim, 100, self.n_domain_classes, dropout_rate)
+        self.domain_classifier = FFClassifier(self.embedding_dim, 100,
+                                              self.n_domain_classes,
+                                              dropout_rate)
 
     def gen_feature_embeddings(self, input_ids, att_mask):
 
@@ -120,13 +121,12 @@ class MFDomainAdapt(torch.nn.Module):
 
         return last_hidden_state, pooler_output
 
-    def forward(
-            self,
-            input_ids,
-            att_mask,
-            domain_labels,
-            lambda_domain,
-            adv=True):
+    def forward(self,
+                input_ids,
+                att_mask,
+                domain_labels,
+                lambda_domain,
+                adv=True):
         """
         Args:
             input_ids: generated from tokenizer
@@ -164,4 +164,9 @@ class MFDomainAdapt(torch.nn.Module):
                 pooler_output, lambda_domain)
             domain_output = self.domain_classifier(reverse_pooler_output)
 
-        return {'class_output': class_output, 'domain_output': domain_output, 'rec_embed': rec_embeddings, 'trans_W': trans_W}
+        return {
+            'class_output': class_output,
+            'domain_output': domain_output,
+            'rec_embed': rec_embeddings,
+            'trans_W': trans_W
+        }

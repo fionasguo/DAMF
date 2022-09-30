@@ -15,11 +15,10 @@ from model import MFBasic, MFDomainAdapt
 from data_loader import MFData
 
 
-def compute_feat(
-        model: torch.nn.Module,
-        dataset: MFData,
-        device: str,
-        batch_size: int = 64) -> Tuple[List, List]:
+def compute_feat(model: torch.nn.Module,
+                 dataset: MFData,
+                 device: str,
+                 batch_size: int = 64) -> Tuple[List, List]:
     """
     Compute feature embeddings (both pooler outputs and last hidden states) for the given dataset using the given model.
 
@@ -32,8 +31,9 @@ def compute_feat(
         feature embeddings
         domain labels
     """
-    dataloader = DataLoader(
-        dataset=dataset, batch_size=batch_size, shuffle=False)
+    dataloader = DataLoader(dataset=dataset,
+                            batch_size=batch_size,
+                            shuffle=False)
 
     len_dataloader = len(dataloader)
     data_iter = iter(dataloader)
@@ -74,10 +74,7 @@ def compute_feat(
     return feats, domain_labels
 
 
-def plot_heatmap(
-        feats: List,
-        domain_labels: List,
-        fig_save_path: str):
+def plot_heatmap(feats: List, domain_labels: List, fig_save_path: str):
     """
     Plot feature embeddings as heatmap.
 
@@ -89,10 +86,7 @@ def plot_heatmap(
     fig.savefig(fig_save_path + '/heatmap.png', format='png')
 
 
-def plot_tsne(
-        feats: List,
-        domain_labels: List,
-        fig_save_path: str):
+def plot_tsne(feats: List, domain_labels: List, fig_save_path: str):
     """
     Plot feature embeddings as tsne.
 
@@ -104,24 +98,23 @@ def plot_tsne(
     plt.figure(figsize=(8, 8))
     plt.xlim((-40, 40))
     plt.ylim((-40, 40))
-    fig = sns.scatterplot(
-        x=tsne_results[:, 0], y=tsne_results[:, 1],
-        hue=domain_labels,
-        palette=sns.color_palette("hls", len(np.unique(domain_labels))),
-        legend="full",
-        alpha=0.3
-    ).get_figure()
+    fig = sns.scatterplot(x=tsne_results[:, 0],
+                          y=tsne_results[:, 1],
+                          hue=domain_labels,
+                          palette=sns.color_palette(
+                              "hls", len(np.unique(domain_labels))),
+                          legend="full",
+                          alpha=0.3).get_figure()
 
     fig.savefig(fig_save_path + '/tsne.png', format='png')
 
 
-def feature_embedding_analysis(
-        source_dataset: MFData,
-        target_dataset: MFData,
-        fig_save_path: str,
-        batch_size: int = 64,
-        model: torch.nn.Module = None,
-        model_path: str = None):
+def feature_embedding_analysis(source_dataset: MFData,
+                               target_dataset: MFData,
+                               fig_save_path: str,
+                               batch_size: int = 64,
+                               model: torch.nn.Module = None,
+                               model_path: str = None):
     """
     Plot feature embeddings as heatmaps and tsne.
 
@@ -129,8 +122,8 @@ def feature_embedding_analysis(
     """
     device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
-    assert (model != None or model_path !=
-            None), 'Provide a model object or a model path.'
+    assert (model != None
+            or model_path != None), 'Provide a model object or a model path.'
     if model == None:
         model = torch.load(model_path, map_location=torch.device(device))
 
@@ -139,10 +132,10 @@ def feature_embedding_analysis(
     model = model.to(device)
 
     # get feature embeddings of source and target data from the best model (adv model)
-    s_feats, s_domain_labels = compute_feat(
-        model, source_dataset, batch_size, device)
-    t_feats, t_domain_labels = compute_feat(
-        model, target_dataset, batch_size, device)
+    s_feats, s_domain_labels = compute_feat(model, source_dataset, batch_size,
+                                            device)
+    t_feats, t_domain_labels = compute_feat(model, target_dataset, batch_size,
+                                            device)
 
     s_feats.extend(t_feats)
     s_domain_labels.extend(t_domain_labels)

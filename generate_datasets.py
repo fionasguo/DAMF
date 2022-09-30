@@ -98,12 +98,11 @@ def gen_out_domain_data(
     return train, val, test
 
 
-def gen_semi_supervised(
-        train: pd.DataFrame,
-        val: pd.DataFrame,
-        test: pd.DataFrame,
-        train_frac: float = 0.8,
-        seed: int = 3) -> Dict[str, pd.DataFrame]:
+def gen_semi_supervised(train: pd.DataFrame,
+                        val: pd.DataFrame,
+                        test: pd.DataFrame,
+                        train_frac: float = 0.8,
+                        seed: int = 3) -> Dict[str, pd.DataFrame]:
     """
     Separate train/dev/test data by source and target domains.
 
@@ -121,8 +120,8 @@ def gen_semi_supervised(
     # and then make the majority of target data the unlabeled training data
     unlabeled_training_data = test.sample(frac=train_frac, random_state=seed)
     # for the unlabeled training data, split into train and val
-    target_train = unlabeled_training_data.sample(
-        frac=train_frac, random_state=seed)
+    target_train = unlabeled_training_data.sample(frac=train_frac,
+                                                  random_state=seed)
     target_val = unlabeled_training_data.drop(target_train.index)
     # save the small portion as the true test data
     true_test_data = test.drop(unlabeled_training_data.index)
@@ -130,37 +129,40 @@ def gen_semi_supervised(
     # in the training/val data, balance the amount of data in each domain in the source data and target data, sample every domain to the size of the smallest domain
     train_domain_size = min(
         train.groupby('domain_idx')['text'].count().min(),
-        target_train.groupby('domain_idx')['text'].count().min()
-    )
+        target_train.groupby('domain_idx')['text'].count().min())
 
-    train = train.groupby('domain_idx').sample(
-        n=train_domain_size, random_state=seed)
+    train = train.groupby('domain_idx').sample(n=train_domain_size,
+                                               random_state=seed)
     target_train = target_train.groupby('domain_idx').sample(
         n=train_domain_size, random_state=seed)
 
     val_domain_size = min(
         val.groupby('domain_idx')['text'].count().min(),
-        target_val.groupby('domain_idx')['text'].count().min()
-    )
+        target_val.groupby('domain_idx')['text'].count().min())
 
-    val = val.groupby('domain_idx').sample(
-        n=val_domain_size, random_state=seed)
-    target_val = target_val.groupby('domain_idx').sample(
-        n=val_domain_size, random_state=seed)
+    val = val.groupby('domain_idx').sample(n=val_domain_size,
+                                           random_state=seed)
+    target_val = target_val.groupby('domain_idx').sample(n=val_domain_size,
+                                                         random_state=seed)
 
-    return {'s_train': train, 't_train': target_train, 's_val': val, 't_val': target_val, 'test': true_test_data}
+    return {
+        's_train': train,
+        't_train': target_train,
+        's_val': val,
+        't_val': target_val,
+        'test': true_test_data
+    }
 
 
-def load_data(
-        data_dir: str,
-        tokenizer_path: str,
-        n_mf_classes: int,
-        train_domain: List[str],
-        test_domain: List[str],
-        semi_supervised: bool,
-        max_seq_len: int = 50,
-        train_frac: float = 0.8,
-        seed: int = 3) -> Dict[str, MFData]:
+def load_data(data_dir: str,
+              tokenizer_path: str,
+              n_mf_classes: int,
+              train_domain: List[str],
+              test_domain: List[str],
+              semi_supervised: bool,
+              max_seq_len: int = 50,
+              train_frac: float = 0.8,
+              seed: int = 3) -> Dict[str, MFData]:
     """
     Generate train/dev/test datasets.
 
@@ -182,13 +184,14 @@ def load_data(
     if n_mf_classes == 2:
         mf_label_names = ['moral', 'immoral']
     elif n_mf_classes == 10:
-        mf_label_names = ['care', 'harm', 'fairness', 'cheating', 'loyalty',
-                     'betrayal', 'authority', 'subversion', 'purity', 'degradation']
+        mf_label_names = [
+            'care', 'harm', 'fairness', 'cheating', 'loyalty', 'betrayal',
+            'authority', 'subversion', 'purity', 'degradation'
+        ]
     elif n_mf_classes == 5:
         mf_label_names = ['care', 'fairness', 'loyalty', 'authority', 'purity']
     else:
-        raise ValueError(
-            'n_mf_classes not valid. Choose from 2, 5 or 10.')
+        raise ValueError('n_mf_classes not valid. Choose from 2, 5 or 10.')
 
     # read data
     df = pd.read_csv(data_dir)
@@ -200,33 +203,41 @@ def load_data(
     # generate train/val/test datasets
     if set(test_domain).issubset(set(train_domain)):
         # in-domain
-        train, val, test = gen_in_domain_data(
-            df, train_domain, test_domain, train_frac=train_frac, seed=seed)
+        train, val, test = gen_in_domain_data(df,
+                                              train_domain,
+                                              test_domain,
+                                              train_frac=train_frac,
+                                              seed=seed)
     else:
         # out-of-domain
-        train, val, test = gen_out_domain_data(
-            df, train_domain, test_domain, train_frac=train_frac, seed=seed)
+        train, val, test = gen_out_domain_data(df,
+                                               train_domain,
+                                               test_domain,
+                                               train_frac=train_frac,
+                                               seed=seed)
 
     dataset_dict = {'train': train, 'val': val, 'test': test}
 
     # split train/val/test into source and target domains
     if semi_supervised:
-        dataset_dict = gen_semi_supervised(
-            train, val, test, train_frac=train_frac, seed=seed)
+        dataset_dict = gen_semi_supervised(train,
+                                           val,
+                                           test,
+                                           train_frac=train_frac,
+                                           seed=seed)
 
     # init the tokenzier
-    tokenizer = AutoTokenizer.from_pretrained(
-        tokenizer_path, use_fast=True, local_files_only=True)
+    tokenizer = AutoTokenizer.from_pretrained(tokenizer_path,
+                                              use_fast=True,
+                                              local_files_only=True)
     # encode the text and take the labels
     datasets = {}
     for k, v in dataset_dict.items():
         # encode the text
-        encodings = v['text'].apply(
-            tokenizer,
-            truncation=True,
-            max_length=max_seq_len,
-            padding="max_length"
-        ).tolist()[:20]
+        encodings = v['text'].apply(tokenizer,
+                                    truncation=True,
+                                    max_length=max_seq_len,
+                                    padding="max_length").tolist()[:20]
 
         mf_labels = v[mf_label_names].values[:20]
 

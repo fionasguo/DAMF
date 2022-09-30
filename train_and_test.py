@@ -40,7 +40,6 @@ from utils import read_args, set_seed
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-
 if __name__ == '__main__':
     # logger
     try:
@@ -48,7 +47,8 @@ if __name__ == '__main__':
     except:
         logfilename = datetime.now().strftime("%Y%m%d%H%M%S")
     logging.basicConfig(filename=logfilename + '.log',
-                        format="%(message)s", level=logging.INFO)
+                        format="%(message)s",
+                        level=logging.INFO)
 
     # args
     mode, args = read_args()
@@ -61,12 +61,9 @@ if __name__ == '__main__':
     logging.info('Start processing data...')
 
     # data should be in a csv file with these columns: 'text','domain' and MF_LABELS
-    datasets = load_data(args['data_dir'],
-                         args['pretrained_path'],
-                         args['n_mf_classes'],
-                         args['train_domain'],
-                         args['test_domain'],
-                         args['semi_supervised'],
+    datasets = load_data(args['data_dir'], args['pretrained_path'],
+                         args['n_mf_classes'], args['train_domain'],
+                         args['test_domain'], args['semi_supervised'],
                          args['seed'])
 
     logging.info(f'Finished processing data. Time: {time.time()-start_time}')
@@ -83,7 +80,8 @@ if __name__ == '__main__':
         trainer.train()
 
         logging.info(
-            f"Finished training {args['train_domain']} data. Time: {time.time()-start_time}")
+            f"Finished training {args['train_domain']} data. Time: {time.time()-start_time}"
+        )
 
     if 'test' in mode:
         start_time = time.time()
@@ -98,16 +96,23 @@ if __name__ == '__main__':
         else:
             raise ValueError('Please provide a model for evaluation.')
 
-        test_accu = evaluate(datasets['test'], args['batch_size'],
-                             model_path=eval_model_path, domain_adapt=args['domain_adapt'], test=True)
+        test_accu = evaluate(datasets['test'],
+                             args['batch_size'],
+                             model_path=eval_model_path,
+                             domain_adapt=args['domain_adapt'],
+                             test=True)
         logging.info('Macro F1 of the %s TEST dataset: %f' %
                      ('target', test_accu))
 
         # plot feature embedding heapmaps and tsne for domain adapt cases
         if 's_val' in datasets:
             logging.info('performing feature embedding analysis')
-            feature_embedding_analysis(
-                datasets['s_val'], datasets['t_val'], args['output_path'], args['batch_size'], model_path=eval_model_path)
+            feature_embedding_analysis(datasets['s_val'],
+                                       datasets['t_val'],
+                                       args['output_path'],
+                                       args['batch_size'],
+                                       model_path=eval_model_path)
 
         logging.info(
-            f"Finished evaluating test data {args['test_domain']}. Time: {time.time()-start_time}")
+            f"Finished evaluating test data {args['test_domain']}. Time: {time.time()-start_time}"
+        )

@@ -28,18 +28,20 @@ class MFData(Dataset):
         self.feat_embed = None
 
     def __getitem__(self, idx):
-        item = {key: torch.tensor(val, dtype=torch.long)
-                for key, val in self.encodings[idx].items()}
+        item = {
+            key: torch.tensor(val, dtype=torch.long)
+            for key, val in self.encodings[idx].items()
+        }
         if self.mf_labels is not None:
-            item['mf_labels'] = torch.tensor(
-                self.mf_labels[idx], dtype=torch.float)
+            item['mf_labels'] = torch.tensor(self.mf_labels[idx],
+                                             dtype=torch.float)
         if self.domain_labels is not None:
-            item['domain_labels'] = torch.tensor(
-                self.domain_labels[idx], dtype=torch.long)
+            item['domain_labels'] = torch.tensor(self.domain_labels[idx],
+                                                 dtype=torch.long)
 
         if self.feat_embed is not None:
-            item['feat_embed'] = torch.tensor(
-                self.feat_embed[idx], dtype=torch.float)
+            item['feat_embed'] = torch.tensor(self.feat_embed[idx],
+                                              dtype=torch.float)
 
         return item, idx
 

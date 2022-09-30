@@ -52,14 +52,15 @@ from utils import read_args, set_seed
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-
 if __name__ == '__main__':
     ## logger
     try:
         logfilename = os.environ["SLURM_JOB_ID"]
     except:
         logfilename = datetime.now().strftime("%Y%m%d%H%M%S")
-    logging.basicConfig(filename=logfilename+'.log',format="%(message)s",level=logging.INFO)
+    logging.basicConfig(filename=logfilename + '.log',
+                        format="%(message)s",
+                        level=logging.INFO)
 
     ## args
     mode, args = read_args()
@@ -72,12 +73,9 @@ if __name__ == '__main__':
     logging.info('Start processing data...')
 
     # data should be in a csv file with these columns: 'text','domain' and MF_LABELS
-    datasets = load_data(args['data_dir'],
-                         args['pretrained_path'],
-                         args['n_mf_classes'],
-                         args['train_domain'],
-                         args['test_domain'],
-                         args['semi_supervised'],
+    datasets = load_data(args['data_dir'], args['pretrained_path'],
+                         args['n_mf_classes'], args['train_domain'],
+                         args['test_domain'], args['semi_supervised'],
                          args['seed'])
 
     logging.info(f'Finished processing data. Time: {time.time()-start_time}')
@@ -90,70 +88,95 @@ if __name__ == '__main__':
         logging.info('Start hyperparameter searching...')
 
         best_accu = 0.0
-        for lambda_rec in [1,0.1]:
-            for lambda_trans in [10,1,0.1,0.01]:
+        for lambda_rec in [1, 0.1]:
+            for lambda_trans in [10, 1, 0.1, 0.01]:
                 args['lambda_rec'] = lambda_rec
                 args['lambda_trans'] = lambda_trans
                 # args['gamma'] = gamma
 
-                datasets = load_data(args['data_dir'],
-                                     args['pretrained_path'],
+                datasets = load_data(args['data_dir'], args['pretrained_path'],
                                      args['n_mf_classes'],
-                                     args['train_domain'],
-                                     args['test_domain'],
-                                     args['semi_supervised'],
-                                     args['seed'])
+                                     args['train_domain'], args['test_domain'],
+                                     args['semi_supervised'], args['seed'])
 
                 trainer = DomainAdaptTrainer(datasets, args)
                 accu = trainer.train()
 
-                logging.info(f"\nHyperparameter search: lambda_trans={lambda_trans}, lambda_rec={lambda_rec}, gamma={args['gamma']}, num_no_adv={args['num_no_adv']}, val accu={accu}")
-                test_accu = evaluate(datasets['test'],args['batch_size'],model_path=args['output_path']+'/best_model.pth',domain_adapt=args['domain_adapt'],test=True)
+                logging.info(
+                    f"\nHyperparameter search: lambda_trans={lambda_trans}, lambda_rec={lambda_rec}, gamma={args['gamma']}, num_no_adv={args['num_no_adv']}, val accu={accu}"
+                )
+                test_accu = evaluate(datasets['test'],
+                                     args['batch_size'],
+                                     model_path=args['output_path'] +
+                                     '/best_model.pth',
+                                     domain_adapt=args['domain_adapt'],
+                                     test=True)
                 logging.info('test accu: %f' % test_accu)
                 if accu > best_accu:
                     best_accu = accu
                     best_lambda_rec = lambda_rec
                     best_lambda_trans = lambda_trans
 
-                    subprocess.call(['cp',args['output_path']+'/best_model.pth',args['output_path']+'/hp_search_best_model.pth'])
+                    subprocess.call([
+                        'cp', args['output_path'] + '/best_model.pth',
+                        args['output_path'] + '/hp_search_best_model.pth'
+                    ])
 
-        logging.info(f"\nHyperparameter search finished. Best model has lambda_trans={best_lambda_trans}, lambda_rec={best_lambda_rec}, gamma={args['gamma']}, num_no_adv={args['num_no_adv']}. Macro F1={best_accu}\n")
+        logging.info(
+            f"\nHyperparameter search finished. Best model has lambda_trans={best_lambda_trans}, lambda_rec={best_lambda_rec}, gamma={args['gamma']}, num_no_adv={args['num_no_adv']}. Macro F1={best_accu}\n"
+        )
         logging.info('============ Evaluation on Test Data ============= \n')
-        test_accu = evaluate(datasets['test'],args['batch_size'],model_path=args['output_path']+'/hp_search_best_model.pth',domain_adapt=args['domain_adapt'],test=True)
-        logging.info('Macro F1 of the %s TEST dataset with given (best) model: %f' % ('target', test_accu))
-        logging.info(f"Finished evaluating test data {args['test_domain']}. Time: {time.time()-start_time}")
+        test_accu = evaluate(datasets['test'],
+                             args['batch_size'],
+                             model_path=args['output_path'] +
+                             '/hp_search_best_model.pth',
+                             domain_adapt=args['domain_adapt'],
+                             test=True)
+        logging.info(
+            'Macro F1 of the %s TEST dataset with given (best) model: %f' %
+            ('target', test_accu))
+        logging.info(
+            f"Finished evaluating test data {args['test_domain']}. Time: {time.time()-start_time}"
+        )
 
     elif mode == 'evaluate_seeds':
         start_time = time.time()
-        seeds = [3,2,10,910,5408] # [1,2,10,11,13,15] #[7890,2891,89154,456,189]
+        seeds = [3, 2, 10, 910,
+                 5408]  # [1,2,10,11,13,15] #[7890,2891,89154,456,189]
         if 'seed_lst' in args: seeds = args['seed_lst']
         logging.info('Start evaluating over seed: %s' % str(seeds))
 
         test_accus = []
-        for s in seeds: # 57,910,4897,23923 # [19,37,932,1790,854]:# [3,29,2022,3901,5408]:
+        for s in seeds:  # 57,910,4897,23923 # [19,37,932,1790,854]:# [3,29,2022,3901,5408]:
             logging.info("seed = %d" % s)
             args['seed'] = s
             set_seed(s)
 
-            datasets = load_data(args['data_dir'],
-                                 args['pretrained_path'],
-                                 args['n_mf_classes'],
-                                 args['train_domain'],
-                                 args['test_domain'],
-                                 args['semi_supervised'],
+            datasets = load_data(args['data_dir'], args['pretrained_path'],
+                                 args['n_mf_classes'], args['train_domain'],
+                                 args['test_domain'], args['semi_supervised'],
                                  args['seed'])
 
             trainer = DomainAdaptTrainer(datasets, args)
             accu = trainer.train()
 
-            test_accu = evaluate(datasets['test'],args['batch_size'],model_path=args['output_path']+'/best_model.pth',domain_adapt=args['domain_adapt'],test=True)
+            test_accu = evaluate(datasets['test'],
+                                 args['batch_size'],
+                                 model_path=args['output_path'] +
+                                 '/best_model.pth',
+                                 domain_adapt=args['domain_adapt'],
+                                 test=True)
             test_accus.append(test_accu)
-            logging.info('Seed = %f. Macro F1 of the %s TEST dataset with best model: %f' % (s, 'target', test_accu))
+            logging.info(
+                'Seed = %f. Macro F1 of the %s TEST dataset with best model: %f'
+                % (s, 'target', test_accu))
 
         mean = sum(test_accus) / len(test_accus)
-        variance = sum([((x - mean) ** 2) for x in test_accus]) / len(test_accus)
-        std_dev = variance ** 0.5
-        logging.info('Evaluation over different seeds %s is done. Average F1 = %f; std dev = %f' % (str(seeds), mean, std_dev))
+        variance = sum([((x - mean)**2) for x in test_accus]) / len(test_accus)
+        std_dev = variance**0.5
+        logging.info(
+            'Evaluation over different seeds %s is done. Average F1 = %f; std dev = %f'
+            % (str(seeds), mean, std_dev))
         logging.info(f"Time: {time.time()-start_time}")
 
     else:
@@ -166,31 +189,59 @@ if __name__ == '__main__':
 
             trainer.train()
 
-            logging.info(f"Finished training {args['train_domain']} data. Time: {time.time()-start_time}")
+            logging.info(
+                f"Finished training {args['train_domain']} data. Time: {time.time()-start_time}"
+            )
 
         if mode != 'train':
             start_time = time.time()
             logging.info('Start processing test data ...')
 
-            logging.info('============ Evaluation on Test Data ============= \n')
+            logging.info(
+                '============ Evaluation on Test Data ============= \n')
             # evaluate with the best model
             try:
-                test_accu = evaluate(datasets['test'],args['batch_size'],model_path=args['output_path']+'/best_model.pth',domain_adapt=args['domain_adapt'],test=True)
-                logging.info('Macro F1 of the %s TEST dataset with model at last epoch: %f' % ('target', test_accu))
+                test_accu = evaluate(datasets['test'],
+                                     args['batch_size'],
+                                     model_path=args['output_path'] +
+                                     '/best_model.pth',
+                                     domain_adapt=args['domain_adapt'],
+                                     test=True)
+                logging.info(
+                    'Macro F1 of the %s TEST dataset with model at last epoch: %f'
+                    % ('target', test_accu))
                 # plot feature embedding heapmaps and tsne for domain adapt cases
                 if 's_val' in datasets:
                     logging.info('performing feature embedding analysis')
-                    feature_embedding_analysis(datasets['s_val'],datasets['t_val'],args['output_path'],args['batch_size'],model_path=args['output_path']+'/best_model.pth')
+                    feature_embedding_analysis(datasets['s_val'],
+                                               datasets['t_val'],
+                                               args['output_path'],
+                                               args['batch_size'],
+                                               model_path=args['output_path'] +
+                                               '/best_model.pth')
             except:
                 pass
 
             if args.get('mf_model_path') != None:
                 # evaluate with the given model path
-                test_accu = evaluate(datasets['test'],args['batch_size'],model_path=args['mf_model_path'],domain_adapt=args['domain_adapt'],test=True)
-                logging.info('Macro F1 of the %s TEST dataset with given (best) model: %f' % ('target', test_accu))
+                test_accu = evaluate(datasets['test'],
+                                     args['batch_size'],
+                                     model_path=args['mf_model_path'],
+                                     domain_adapt=args['domain_adapt'],
+                                     test=True)
+                logging.info(
+                    'Macro F1 of the %s TEST dataset with given (best) model: %f'
+                    % ('target', test_accu))
                 # plot feature embedding heapmaps and tsne for domain adapt cases
                 if 's_val' in datasets:
                     logging.info('performing feature embedding analysis')
-                    feature_embedding_analysis(datasets['s_val'],datasets['t_val'],args['output_path'],args['batch_size'],model_path=args['mf_model_path'])
+                    feature_embedding_analysis(
+                        datasets['s_val'],
+                        datasets['t_val'],
+                        args['output_path'],
+                        args['batch_size'],
+                        model_path=args['mf_model_path'])
 
-            logging.info(f"Finished evaluating test data {args['test_domain']}. Time: {time.time()-start_time}")
+            logging.info(
+                f"Finished evaluating test data {args['test_domain']}. Time: {time.time()-start_time}"
+            )

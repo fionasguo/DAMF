@@ -12,13 +12,12 @@ from model import MFBasic, MFDomainAdapt
 from data_loader import MFData
 
 
-def predict(
-        model: torch.nn.Module,
-        dataset: MFData,
-        device: str,
-        batch_size: int = 64,
-        domain_adapt: bool = True,
-        is_adv: bool = True) -> Tuple[List, List, List, List]:
+def predict(model: torch.nn.Module,
+            dataset: MFData,
+            device: str,
+            batch_size: int = 64,
+            domain_adapt: bool = True,
+            is_adv: bool = True) -> Tuple[List, List, List, List]:
     """
     Predict MF and/or domain labels based on given model.
 
@@ -35,8 +34,9 @@ def predict(
     """
     model.eval()
 
-    dataloader = DataLoader(
-        dataset=dataset, batch_size=batch_size, shuffle=False)
+    dataloader = DataLoader(dataset=dataset,
+                            batch_size=batch_size,
+                            shuffle=False)
     len_dataloader = len(dataloader)
     data_target_iter = iter(dataloader)
 
@@ -54,11 +54,14 @@ def predict(
 
         with torch.no_grad():
             if not domain_adapt:
-                outputs = model(
-                    data_target['input_ids'], data_target['attention_mask'])
+                outputs = model(data_target['input_ids'],
+                                data_target['attention_mask'])
             else:
-                outputs = model(data_target['input_ids'], data_target['attention_mask'],
-                                data_target['domain_labels'], lambda_domain=0, adv=is_adv)
+                outputs = model(data_target['input_ids'],
+                                data_target['attention_mask'],
+                                data_target['domain_labels'],
+                                lambda_domain=0,
+                                adv=is_adv)
 
         mf_pred_confidence = torch.sigmoid(outputs['class_output'])
         mf_pred = ((mf_pred_confidence) >= 0.5).long()
@@ -76,13 +79,12 @@ def predict(
     return mf_preds, mf_labels, domain_preds, domain_labels
 
 
-def evaluate(
-        dataset: MFData,
-        batch_size: int = 64,
-        model: torch.nn.Module = None,
-        model_path: str = None,
-        is_adv: bool = True,
-        test: bool = False) -> float:
+def evaluate(dataset: MFData,
+             batch_size: int = 64,
+             model: torch.nn.Module = None,
+             model_path: str = None,
+             is_adv: bool = True,
+             test: bool = False) -> float:
     """
     Evalute test data and print F1 scores.
 
@@ -105,8 +107,8 @@ def evaluate(
 
     device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
-    assert (model != None or model_path !=
-            None), 'Provide a model instance or a model path.'
+    assert (model != None
+            or model_path != None), 'Provide a model instance or a model path.'
     if model == None:
         model = torch.load(model_path, map_location=torch.device(device))
 
@@ -124,20 +126,24 @@ def evaluate(
         model, dataset, device, batch_size, domain_adapt, is_adv)
 
     # print reports
-    mf_report = metrics.classification_report(
-        mf_labels, mf_preds, zero_division=0)
+    mf_report = metrics.classification_report(mf_labels,
+                                              mf_preds,
+                                              zero_division=0)
     logging.debug('MF classification report:')
     logging.debug(mf_report)
     conf_matrix = metrics.multilabel_confusion_matrix(mf_labels, mf_preds)
     logging.debug('MF classification confusion matrix:')
     logging.debug(conf_matrix)
-    mf_report = metrics.classification_report(
-        mf_labels, mf_preds, zero_division=0, output_dict=True)
+    mf_report = metrics.classification_report(mf_labels,
+                                              mf_preds,
+                                              zero_division=0,
+                                              output_dict=True)
     macro_f1 = mf_report['weighted avg']['f1-score']
 
     if domain_adapt and is_adv:
-        domain_report = metrics.classification_report(
-            domain_labels, domain_preds, zero_division=0)
+        domain_report = metrics.classification_report(domain_labels,
+                                                      domain_preds,
+                                                      zero_division=0)
         conf_matrix = metrics.confusion_matrix(domain_labels, domain_preds)
         logging.debug('Domain classification report:')
         logging.debug(domain_report)

@@ -11,7 +11,7 @@ import transformers
 
 
 def set_seed(seed):
-    os.environ['PYTHONHASHSEED']=str(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
     random.seed(seed)
     np.random.seed(seed)
     transformers.set_seed(seed)
@@ -21,6 +21,7 @@ def set_seed(seed):
     torch.backends.cudnn.benchmark = False
     torch.backends.cudnn.deterministic = True
 
+
 def get_gpu_memory_map():
     """
     Get the current gpu usage.
@@ -28,17 +29,21 @@ def get_gpu_memory_map():
     """
     device = "cuda:0" if torch.cuda.is_available() else "cpu"
     if device == "cpu":
-        return {'cpu_count': os.cpu_count(), '% RAM used': psutil.virtual_memory()[2]}
+        return {
+            'cpu_count': os.cpu_count(),
+            '% RAM used': psutil.virtual_memory()[2]
+        }
 
-    result = subprocess.check_output(
-        [
-            'nvidia-smi', '--query-gpu=memory.used',
-            '--format=csv,nounits,noheader'
-        ], encoding='utf-8')
+    result = subprocess.check_output([
+        'nvidia-smi', '--query-gpu=memory.used',
+        '--format=csv,nounits,noheader'
+    ],
+                                     encoding='utf-8')
     # Convert lines into a dictionary
     gpu_memory = [int(x) for x in result.strip().split('\n')]
     gpu_memory_map = dict(zip(range(len(gpu_memory)), gpu_memory))
     return gpu_memory_map
+
 
 def count_devices():
     """
@@ -51,28 +56,47 @@ def count_devices():
 
     return n_devices
 
+
 def read_args():
     # command args
-    parser = argparse.ArgumentParser(description='Domain adaptation model for moral foundation inference.')
-    parser.add_argument('-m','--mode',type=str,help='train,test,or train_test')
-    parser.add_argument('-c','--config_path',type=str,help='configuration file dir that specifies hyperparameters etc')
-    parser.add_argument('-i','--data_dir',type=str,help='input data directory')
-    parser.add_argument('-o','--output_dir',type=str,help='output directory')
-    parser.add_argument('-s','--seeds',type=str,help='list of seeds to evaluate')
+    parser = argparse.ArgumentParser(
+        description='Domain adaptation model for moral foundation inference.')
+    parser.add_argument('-m',
+                        '--mode',
+                        type=str,
+                        help='train,test,or train_test')
+    parser.add_argument(
+        '-c',
+        '--config_path',
+        type=str,
+        help='configuration file dir that specifies hyperparameters etc')
+    parser.add_argument('-i',
+                        '--data_dir',
+                        type=str,
+                        help='input data directory')
+    parser.add_argument('-o',
+                        '--output_dir',
+                        type=str,
+                        help='output directory')
+    parser.add_argument('-s',
+                        '--seeds',
+                        type=str,
+                        help='list of seeds to evaluate')
     command_args = parser.parse_args()
 
     mode = command_args.mode
 
     # read args in config file
     args = {}
-    with open(command_args.config_path,'r') as f:
+    with open(command_args.config_path, 'r') as f:
         for l in f.readlines():
             if l.strip() == '' or l.strip().startswith('#'):
                 continue
             arg = l.strip().split(" = ")
-            arg_name,arg_val = arg[0],arg[1]
+            arg_name, arg_val = arg[0], arg[1]
             if 'path' in arg_name:
-                arg_val = os.path.join(os.path.dirname(os.path.realpath(__file__)),arg_val)
+                arg_val = os.path.join(
+                    os.path.dirname(os.path.realpath(__file__)), arg_val)
             args[arg_name] = arg_val
 
     if command_args.data_dir:
@@ -96,7 +120,8 @@ def read_args():
     else:
         args['test_domain'] = [args['test_domain']]
     args['n_mf_classes'] = int(args['n_mf_classes'])
-    args['n_domain_classes'] = len(set(args['train_domain']+args['test_domain']))
+    args['n_domain_classes'] = len(
+        set(args['train_domain'] + args['test_domain']))
     args['lr'] = float(args['lr'])
     args['alpha'] = float(args['alpha'])
     args['beta'] = float(args['beta'])
