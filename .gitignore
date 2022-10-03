@@ -1,5 +1,9 @@
 *.csv
-trained_models/*
+*.pth
+*.model
+*.json
+*.bin
+*.txt
 *__pycache__*
 *.log
 tmp/*
