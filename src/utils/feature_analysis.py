@@ -14,7 +14,7 @@ from typing import Tuple, List
 from src.modeling.model import MFBasic, MFDomainAdapt
 from src.data_processing.data_loader import MFData
 
-logging.getLogger('matplotlib.font_manager').setLevel(logging.ERROR)
+logging.getLogger('matplotlib').setLevel(logging.ERROR)
 
 
 def compute_feat(model: torch.nn.Module,
