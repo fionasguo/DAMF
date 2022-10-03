@@ -1,7 +1,7 @@
 *.csv
 trained_models/*
 *__pycache__*
-*config*
+config
 *.log
 tmp/*
 *DS_Store*
