@@ -8,8 +8,8 @@ from sklearn import metrics
 import logging
 from typing import Tuple, List
 
-from model import MFBasic, MFDomainAdapt
-from data_loader import MFData
+from src.modeling.model import MFBasic, MFDomainAdapt
+from src.data_processing.data_loader import MFData
 
 
 def predict(model: torch.nn.Module,

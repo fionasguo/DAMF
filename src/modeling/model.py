@@ -2,12 +2,12 @@
 Define 2 MF inference models - basic (eg vanilla bert) and domain adapt model.
 """
 
-from modules import FFClassifier, Reconstruction, Transformation
 import torch
 import transformers
 from transformers import AutoModel, AutoConfig
 
-from grad_rev_fn import ReverseLayerF
+from src.modeling.grad_rev_fn import ReverseLayerF
+from src.modeling.modules import FFClassifier, Reconstruction, Transformation
 
 transformers.logging.set_verbosity_error()
 
@@ -22,17 +22,17 @@ class MFBasic(torch.nn.Module):
         mf_classifier: the prediction layer in the end
     """
 
-    def __init__(self, pretrained_path: str, n_mf_classes: int,
+    def __init__(self, pretrained_dir: str, n_mf_classes: int,
                  dropout_rate: float):
         """
         Args:
-            pretrained_path: where to load pretrained model file
+            pretrained_dir: where to load pretrained model file
             n_mf_classes: number of moral foundation classes in the data
             dropout_rate: how much nodes to drop to mitigate overfitting. from 0 to 1.
         """
         super(MFBasic, self).__init__()
 
-        self.feature = AutoModel.from_pretrained(pretrained_path)
+        self.feature = AutoModel.from_pretrained(pretrained_dir)
 
         self.embedding_dim = self.feature.embeddings.word_embeddings.embedding_dim
 
@@ -76,7 +76,7 @@ class MFDomainAdapt(torch.nn.Module):
     """
 
     def __init__(self,
-                 pretrained_path: str,
+                 pretrained_dir: str,
                  n_mf_classes: int,
                  n_domain_classes: int,
                  dropout_rate: float,
@@ -87,9 +87,9 @@ class MFDomainAdapt(torch.nn.Module):
         super(MFDomainAdapt, self).__init__()
 
         # if is_training:
-        #     self.feature = AutoModel.from_pretrained(pretrained_path)
+        #     self.feature = AutoModel.from_pretrained(pretrained_dir)
         # else:
-        #     self.pretrained_config = AutoConfig.from_pretrained(pretrained_path, local_files_only=True)
+        #     self.pretrained_config = AutoConfig.from_pretrained(pretrained_dir, local_files_only=True)
         #     self.feature = AutoModel.from_config(self.pretrained_config)
 
         self.n_mf_classes = n_mf_classes
@@ -97,7 +97,7 @@ class MFDomainAdapt(torch.nn.Module):
         self.has_rec = has_rec
         self.has_trans = has_trans
 
-        self.feature = AutoModel.from_pretrained(pretrained_path)
+        self.feature = AutoModel.from_pretrained(pretrained_dir)
         self.embedding_dim = self.feature.embeddings.word_embeddings.embedding_dim
 
         self.rec_module = Reconstruction(self.embedding_dim,

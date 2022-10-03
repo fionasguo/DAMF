@@ -7,10 +7,10 @@ The data csv needs to have these columns: 'text','domain' and all columns in des
 import pandas as pd
 from typing import List, Tuple, Dict
 
-from preprocessing import preprocess_tweet
-from data_loader import MFData
-
 from transformers import AutoTokenizer
+
+from src.data_processing.preprocessing import preprocess_tweet
+from src.data_processing.data_loader import MFData
 
 pd.options.mode.chained_assignment = None
 
@@ -153,18 +153,18 @@ def gen_semi_supervised(train: pd.DataFrame,
         'test': true_test_data
     }
 
-def create_MFData(
-        df: pd.DataFrame,
-        tokenizer: AutoTokenizer,
-        mf_label_names: List[str],
-        max_seq_len: int = 50) -> MFData:
+
+def create_MFData(df: pd.DataFrame,
+                  tokenizer: AutoTokenizer,
+                  mf_label_names: List[str],
+                  max_seq_len: int = 50) -> MFData:
     """
     Create MFData instance from a df.
     """
     encodings = df['text'].apply(tokenizer,
-                                truncation=True,
-                                max_length=max_seq_len,
-                                padding="max_length").tolist()
+                                 truncation=True,
+                                 max_length=max_seq_len,
+                                 padding="max_length").tolist()
 
     mf_labels = df[mf_label_names].values
 
@@ -173,6 +173,7 @@ def create_MFData(
     mf_data = MFData(encodings, mf_labels, domain_labels)
 
     return mf_data
+
 
 def load_data(data_dir: str,
               tokenizer_path: str,

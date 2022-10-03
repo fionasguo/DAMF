@@ -1,9 +1,11 @@
 """
 Domain adversarial network for Moral Foundation inference
 
+Command to run: python3 train_and_test.py -m train_test -c config
+
 All arguments:
     data_dir: str, input data directory, can be set in command args or config file
-    output_path: str, directory to write outputs, including trained model and predictions, can be set in command args or config file
+    output_dir: str, directory to write outputs, including trained model and predictions, can be set in command args or config file
     domain_adapt: bool, whether to use domain adversarial training
     transformation: bool, whether to include a linear transformation module to facilitate domain-invariant feature generation
     reconstruction: bool, whether to include a reconstruction module to keep feature encoder from overly corruption by adversarial training
@@ -11,8 +13,8 @@ All arguments:
     train_domain: one str or a list, the source domain, eg. 'MFTC', or ['MFTC','congress']
     test_domain: one str or a list, the target domain, eg. ['congress']
     n_mf_classes: int, can be 10 (number of moral foundation classes) or 2 (moral vs immoral)
-    pretrained_path: str, pretrained LM model for tokenzier and initial feature encoder weights eg. 'models/bert-base-uncased'
-    mf_model_path: str, previou trained model path of this model
+    pretrained_dir: str, pretrained LM model for tokenzier and initial feature encoder weights eg. 'models/bert-base-uncased'
+    mf_model_dir: str, previou trained model path of this model
     lr: learning rate
     alpha, beta: float, for lr decay function, params to update learning rate: lr = lr_init/((1 +α·p)^β), where p = (curr_epoch − num_no_adv)/tot_epoch
     max_seq_len: int, max sequence length for tokenizer
@@ -31,15 +33,51 @@ import os
 import time
 from datetime import datetime
 import logging
+import argparse
 import transformers
 
-from generate_datasets import load_data
-from trainer import DomainAdaptTrainer
-from evaluate import evaluate
-from feature_analysis import feature_embedding_analysis
-from utils import read_args, set_seed
+from src.data_processing.generate_datasets import load_data
+from src.modeling.trainer import DomainAdaptTrainer
+from src.modeling.evaluate import evaluate
+from src.utils.feature_analysis import feature_embedding_analysis
+from src.utils.utils import read_config, set_seed
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
+def read_command_args():
+    parser = argparse.ArgumentParser(
+        description='Domain adaptation model for moral foundation inference.')
+    parser.add_argument('-m',
+                        '--mode',
+                        type=str,
+                        required=True,
+                        help='train,test,or train_test')
+    parser.add_argument(
+        '-c',
+        '--config_path',
+        type=str,
+        required=True,
+        help='configuration file dir that specifies hyperparameters etc')
+    parser.add_argument('-i',
+                        '--data_dir',
+                        type=str,
+                        required=True,
+                        help='input data directory')
+    parser.add_argument('-o',
+                        '--output_dir',
+                        type=str,
+                        required=True,
+                        help='output directory')
+    parser.add_argument('-t',
+                        '--test_model',
+                        type=str,
+                        required=False,
+                        help='if testing, it is optional to provide a trained model weight dir')
+    command_args = parser.parse_args()
+
+    mode = command_args.mode
+
+    return mode, command_args
 
 if __name__ == '__main__':
     # logger
@@ -52,7 +90,8 @@ if __name__ == '__main__':
                         level=logging.DEBUG)
 
     # args
-    mode, args = read_args()
+    mode, command_args = read_command_args()
+    args = read_config(command_args)
 
     # set seed
     set_seed(args['seed'])
@@ -62,9 +101,12 @@ if __name__ == '__main__':
     logging.info('Start processing data...')
 
     # data should be in a csv file with these columns: 'text','domain' and MF_LABELS
-    datasets = load_data(args['data_dir'], args['pretrained_path'],
-                         args['n_mf_classes'], args['train_domain'],
-                         args['test_domain'], args['semi_supervised'],
+    datasets = load_data(args['data_dir'],
+                         args['pretrained_dir'],
+                         args['n_mf_classes'],
+                         args['train_domain'],
+                         args['test_domain'],
+                         args['semi_supervised'],
                          seed=args['seed'])
 
     logging.info(f'Finished processing data. Time: {time.time()-start_time}')
@@ -91,9 +133,9 @@ if __name__ == '__main__':
         logging.info('============ Evaluation on Test Data ============= \n')
         # evaluate with the best model just got from training or with the model given from config
         if trainer is not None:
-            eval_model_path = args['output_path'] + '/best_model.pth'
-        elif args.get('mf_model_path') is not None:
-            eval_model_path = args['mf_model_path']
+            eval_model_path = args['output_dir'] + '/best_model.pth'
+        elif args.get('mf_model_dir') is not None:
+            eval_model_path = args['mf_model_dir']
         else:
             raise ValueError('Please provide a model for evaluation.')
 
@@ -110,7 +152,7 @@ if __name__ == '__main__':
             logging.info('performing feature embedding analysis')
             feature_embedding_analysis(datasets['s_val'],
                                        datasets['t_val'],
-                                       args['output_path'],
+                                       args['output_dir'],
                                        args['batch_size'],
                                        model_path=eval_model_path)
 

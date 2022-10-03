@@ -5,7 +5,7 @@ Define modules used in the model: feedforward, reconstruction, transformation.
 import torch
 from torch.autograd import Function
 
-from utils import count_devices
+from src.utils.utils import count_devices
 
 ########### Feed Forward Classifier ###########
 
@@ -46,18 +46,12 @@ class Reconstruction(torch.nn.Module):
     def __init__(self, embed_dim, device):
         super(Reconstruction, self).__init__()
 
-        self.W = torch.empty((embed_dim, embed_dim)).to(device)
-        self.W = torch.nn.Parameter(torch.nn.init.xavier_normal_(self.W))
-
-        self.b = torch.empty((embed_dim, 1)).to(device)
-        self.b = torch.nn.Parameter(torch.nn.init.xavier_normal_(
-            self.b)).squeeze(1)
-
+        self.l = torch.nn.Linear(embed_dim, embed_dim)
         self.tanh = torch.nn.Tanh()
 
     def forward(self, input):
         # input: (batch_size, seq_len, embed_dim); output: (batch_size,seq_len,embed_dim)
-        return self.tanh(torch.einsum('bld,dd->bld', input, self.W) + self.b)
+        return self.tanh(self.l(input))
 
 
 class ReconstructionLoss(torch.nn.Module):
@@ -94,12 +88,11 @@ class Transformation(torch.nn.Module):
     def __init__(self, input_dim, device):
         super(Transformation, self).__init__()
 
-        self.W = torch.empty((input_dim, input_dim)).to(device)
-        self.W = torch.nn.Parameter(torch.nn.init.xavier_normal_(self.W))
+        self.l = torch.nn.Linear(input_dim, input_dim, bias=False)
 
     def forward(self, input):
         # input: (batch_size, embed_dim)
-        return torch.einsum('bd,dd->bd', input, self.W), self.W
+        return self.l(input), self.l.weight
 
 
 class TransformationLoss(torch.nn.Module):
