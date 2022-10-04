@@ -472,25 +472,34 @@ class DomainAdaptTrainer:
                 torch.save(self.model,
                            self.args['output_dir'] + '/model_in_training.pth')
 
-            # test on validation set
+            # test on source validation set
+            logging.info(f'\nepoch: {epoch}')
             accu_s = evaluate(self.datasets['s_val'],
                               self.args['batch_size'],
                               model=self.model,
                               is_adv=is_adv)
-            accu_t = evaluate(self.datasets['t_val'],
-                              self.args['batch_size'],
-                              model=self.model,
-                              is_adv=is_adv)
-            logging.info(f'\nepoch: {epoch}')
             logging.info('Macro F1 of the %s dataset: %f' % ('source', accu_s))
-            logging.info('Macro F1 of the %s dataset: %f\n' %
-                         ('target', accu_t))
-            if accu_t > best_accu_t and epoch >= self.args['num_no_adv']:
-                best_accu_s = accu_s
-                best_accu_t = accu_t
-                best_epoch = epoch
-                torch.save(self.model,
-                           self.args['output_dir'] + '/best_model.pth')
+            # test on target val set if its label exists
+            if 't_val' in self.datasets and self.datasets[
+                    't_val'].mf_labels is not None:
+                accu_t = evaluate(self.datasets['t_val'],
+                                  self.args['batch_size'],
+                                  model=self.model,
+                                  is_adv=is_adv)
+                logging.info('Macro F1 of the %s dataset: %f\n' %
+                             ('target', accu_t))
+                if accu_t > best_accu_t and epoch >= self.args['num_no_adv']:
+                    best_accu_s = accu_s
+                    best_accu_t = accu_t
+                    best_epoch = epoch
+                    torch.save(self.model,
+                               self.args['output_dir'] + '/best_model.pth')
+            else:
+                if accu_s > best_accu_s and epoch >= self.args['num_no_adv']:
+                    best_accu_s = accu_s
+                    best_epoch = epoch
+                    torch.save(self.model,
+                               self.args['output_dir'] + '/best_model.pth')
 
             # if computing rec loss, at the end of non adversarial training, record the model as the basic mf predicting model without domain adapt, the feature embeddings calculated from this mode will be the original embed
             if self.args['reconstruction'] and epoch == (

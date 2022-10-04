@@ -7,8 +7,8 @@ transformation = True
 reconstruction = True
 semi_supervised = True
 
-train_domain = ['congress','MFTC']
-test_domain = ['covid']
+train_domain = ['twitter','eMFD']
+test_domain = ['incas']
 
 n_mf_classes = 10
 

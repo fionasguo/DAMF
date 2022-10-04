@@ -36,7 +36,7 @@ import logging
 import argparse
 import transformers
 
-from src.data_processing.generate_datasets import load_data
+from src.data_processing.read_data import read_data
 from src.modeling.trainer import DomainAdaptTrainer
 from src.modeling.evaluate import evaluate
 from src.utils.feature_analysis import feature_embedding_analysis
@@ -101,7 +101,7 @@ if __name__ == '__main__':
     logging.info('Start processing data...')
 
     # data should be in a csv file with these columns: 'text','domain' and MF_LABELS
-    datasets = load_data(args['data_dir'],
+    datasets = read_data(args['data_dir'],
                          args['pretrained_dir'],
                          args['n_mf_classes'],
                          args['train_domain'],
@@ -138,7 +138,10 @@ if __name__ == '__main__':
             eval_model_path = args['mf_model_dir']
         else:
             raise ValueError('Please provide a model for evaluation.')
-
+        # check if test data is good
+        if 'test' not in datasets or datasets['test'].mf_labels is None:
+            raise ValueError('Invalid test dataset.')
+        # evaluate
         test_accu = evaluate(datasets['test'],
                              args['batch_size'],
                              model_path=eval_model_path,
@@ -148,10 +151,10 @@ if __name__ == '__main__':
                      ('target', test_accu))
 
         # plot feature embedding heapmaps and tsne for domain adapt cases
-        if 's_val' in datasets:
+        if 's_train' in datasets:
             logging.info('performing feature embedding analysis')
-            feature_embedding_analysis(datasets['s_val'],
-                                       datasets['t_val'],
+            feature_embedding_analysis(datasets['s_train'],
+                                       datasets['t_train'],
                                        args['output_dir'],
                                        args['batch_size'],
                                        model_path=eval_model_path)
