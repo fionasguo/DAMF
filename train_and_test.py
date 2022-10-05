@@ -36,13 +36,14 @@ import logging
 import argparse
 import transformers
 
-from src.data_processing.read_data import read_data
-from src.modeling.trainer import DomainAdaptTrainer
-from src.modeling.evaluate import evaluate
-from src.utils.feature_analysis import feature_embedding_analysis
-from src.utils.utils import read_config, set_seed
+from DAMF import read_data
+from DAMF import DomainAdaptTrainer
+from DAMF import evaluate
+from DAMF import feature_embedding_analysis
+from DAMF import read_config, set_seed
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
 
 def read_command_args():
     parser = argparse.ArgumentParser(
@@ -68,16 +69,19 @@ def read_command_args():
                         type=str,
                         required=True,
                         help='output directory')
-    parser.add_argument('-t',
-                        '--test_model',
-                        type=str,
-                        required=False,
-                        help='if testing, it is optional to provide a trained model weight dir')
+    parser.add_argument(
+        '-t',
+        '--test_model',
+        type=str,
+        required=False,
+        help='if testing, it is optional to provide a trained model weight dir'
+    )
     command_args = parser.parse_args()
 
     mode = command_args.mode
 
     return mode, command_args
+
 
 if __name__ == '__main__':
     # logger
@@ -90,8 +94,10 @@ if __name__ == '__main__':
                         level=logging.DEBUG)
 
     # args
+    curr_dir = os.path.dirname(os.path.realpath(__file__))
+    print(curr_dir)
     mode, command_args = read_command_args()
-    args = read_config(command_args)
+    args = read_config(curr_dir, command_args)
 
     # set seed
     set_seed(args['seed'])

@@ -9,8 +9,8 @@ from typing import List, Tuple, Dict
 
 from transformers import AutoTokenizer
 
-from src.data_processing.preprocessing import preprocess_tweet
-from src.data_processing.data_loader import MFData
+from .preprocessing import preprocess_tweet
+from .data_loader import MFData
 
 pd.options.mode.chained_assignment = None
 

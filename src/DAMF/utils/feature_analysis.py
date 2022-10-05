@@ -12,8 +12,7 @@ import seaborn as sns
 import logging
 from typing import Tuple, List
 
-from src.modeling.model import MFBasic, MFDomainAdapt
-from src.data_processing.data_loader import MFData
+from DAMF.data_processing.data_loader import MFData
 
 logging.getLogger('matplotlib').setLevel(logging.ERROR)
 

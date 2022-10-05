@@ -58,7 +58,7 @@ def count_devices():
     return n_devices
 
 
-def read_config(command_args):
+def read_config(curr_dir, command_args):
     # read args in config file
     args = {}
     with open(command_args.config_path, 'r') as f:
@@ -72,8 +72,7 @@ def read_config(command_args):
 
             args[arg_name] = arg_val
 
-    DAMF_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                            "../..")
+    DAMF_dir = curr_dir
 
     ## format each arg
     # data dir
@@ -88,7 +87,7 @@ def read_config(command_args):
     # provided trained model weights for testing, optional
     try:
         args['mf_model_dir'] = os.path.join(DAMF_dir, 'trained_models',
-                                        command_args.mf_model_dir)
+                                            command_args.mf_model_dir)
     except:
         args['mf_model_dir'] = None
     # booleans

@@ -1,5 +1,5 @@
-# pretrained_dir = twitter-xlm-roberta-base
-pretrained_dir = bert-base-uncased
+pretrained_dir = twitter-xlm-roberta-base
+# pretrained_dir = bert-base-uncased
 # mf_model_dir = model_CovidCongress_MFTC_vanilla/model_in_training.pth
 
 domain_adapt = True
@@ -10,17 +10,17 @@ semi_supervised = True
 train_domain = ['twitter','eMFD']
 test_domain = ['incas']
 
-n_mf_classes = 10
+n_mf_classes = 5
 
 lr = 0.00005
 alpha = 10
 beta = 0.25
-batch_size = 64
-n_epoch = 2
+batch_size = 256
+n_epoch = 100
 dropout_rate = 0.3
 lambda_trans = 1
 lambda_rec = 1
-num_no_adv = 1
-gamma = 1
+num_no_adv = 40
+gamma = 10
 
 seed = 3
