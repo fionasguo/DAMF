@@ -11,21 +11,27 @@ run git clone of the repo.
 ```
 git clone https://github.com/fionasguo/DAMF.git
 ```
+setup the package
+```
+python setup.py install
+```
 
 ## Dependencies
 
-Install all dependencies in [`requirments.txt`](https://github.com/fionasguo/DAMF/blob/master/requirements.txt)
+Will be automatically installed when running setup.py. 
+
+All dependencies are in [`requirments.txt`](https://github.com/fionasguo/DAMF/blob/master/requirements.txt)
 
 ## Use the code
 
 <!-- dd -->
 
-### Run the code
+### Run the example code
 First, make sure to put training and/or test data under the folder [`data`](https://github.com/fionasguo/DAMF/tree/master/data).
 
 Then, make sure to put vanilla pretrained language model files under the folder [`trained_models`](https://github.com/fionasguo/DAMF/tree/master/trained_models).
 
-Then run:
+Then cd to the DAMF folder and run:
 
 ```
 python3 train_and_test.py -m train_test -c config -i mf_data.csv -o tmp
