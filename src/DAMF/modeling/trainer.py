@@ -233,7 +233,7 @@ class DomainAdaptTrainer:
         if self.args['transformation'] and is_adv and mf_loss:
             loss_trans = self.args['lambda_trans'] * \
                 self.loss_fn_trans(outputs['trans_W'])
-            loss += loss_trans
+            # loss += loss_trans
 
         return loss, loss_mf, loss_domain, loss_rec, loss_trans
 
@@ -449,7 +449,7 @@ class DomainAdaptTrainer:
                         data_target, epoch, mf_loss=False)
                     # balance loss between source and target
                     loss = loss + (s_train_batch_size /
-                                   t_train_batch_size) * t_loss
+                                   t_train_batch_size) * t_loss + s_loss_trans
 
                 loss.backward()
                 self.optimizer.step()

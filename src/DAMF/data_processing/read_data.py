@@ -31,7 +31,7 @@ def create_MFData(df: pd.DataFrame,
     encodings = df['text'].apply(tokenizer,
                                  truncation=True,
                                  max_length=max_seq_len,
-                                 padding="max_length").tolist()[:200]
+                                 padding="max_length").tolist()
 
     # some dataset might not have mf labels, eg t_train or test data
     if any([l not in df.columns for l in mf_label_names
@@ -39,9 +39,9 @@ def create_MFData(df: pd.DataFrame,
         # if any of the mf labels is not in the data columns, or if any of the mf label columns has NaN values
         mf_labels = None
     else:
-        mf_labels = df[mf_label_names].values[:200]
+        mf_labels = df[mf_label_names].values
 
-    domain_labels = df['domain_idx'].values[:200]
+    domain_labels = df['domain_idx'].values
 
     mf_data = MFData(encodings, mf_labels, domain_labels)
 
