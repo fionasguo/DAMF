@@ -43,6 +43,7 @@ def predict(model: torch.nn.Module,
     i = 0
 
     mf_preds = []
+    mf_preds_conf = []
     mf_labels = []
     domain_preds = []
     domain_labels = []
@@ -64,6 +65,7 @@ def predict(model: torch.nn.Module,
                                 adv=is_adv)
 
         mf_pred_confidence = torch.sigmoid(outputs['class_output'])
+        mf_preds_conf.extend(mf_pred_confidence.to('cpu').tolist())
         mf_pred = ((mf_pred_confidence) >= 0.5).long()
         mf_preds.extend(mf_pred.to('cpu').tolist())
         # in case no label available
@@ -80,7 +82,7 @@ def predict(model: torch.nn.Module,
 
         i += 1
 
-    return mf_preds, mf_labels, domain_preds, domain_labels
+    return mf_preds, mf_preds_conf, mf_labels, domain_preds, domain_labels
 
 
 def evaluate(dataset: MFData,
@@ -126,7 +128,7 @@ def evaluate(dataset: MFData,
     domain_adapt = (isinstance(model, MFDomainAdapt))
 
     # predict
-    mf_preds, mf_labels, domain_preds, domain_labels = predict(
+    mf_preds, _, mf_labels, domain_preds, domain_labels = predict(
         model, dataset, device, batch_size, domain_adapt, is_adv)
 
     # print reports
