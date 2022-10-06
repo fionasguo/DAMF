@@ -28,7 +28,7 @@ All dependencies are in [`requirments.txt`](https://github.com/fionasguo/DAMF/bl
 
 ### Run the example code
 
-####To train (and test):
+#### To train (and test):
 
 Put the data (eg. xxxxx.csv) under the folder [`data`](https://github.com/fionasguo/DAMF/tree/master/data)
 
@@ -48,7 +48,7 @@ Given a directory to separate csv files each for a train/val/test set, run:
 python3 train_and_test.py -m train_test -c config -i data/mf_datasets -o outputs
 ```
 
-####To test using a trained DAMF model:
+#### To test using a trained DAMF model:
 
 Put the data (eg. xxxxx.csv) under the folder [`data`](https://github.com/fionasguo/DAMF/tree/master/data)
 
