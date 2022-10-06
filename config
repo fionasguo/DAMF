@@ -1,6 +1,5 @@
-pretrained_dir = twitter-xlm-roberta-base
-# pretrained_dir = bert-base-uncased
-# mf_model_dir = model_CovidCongress_MFTC_vanilla/model_in_training.pth
+pretrained_dir = trained_models/twitter-xlm-roberta-base
+# pretrained_dir = trained_models/bert-base-uncased
 
 domain_adapt = True
 transformation = True
