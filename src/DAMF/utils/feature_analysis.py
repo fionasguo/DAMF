@@ -54,12 +54,12 @@ def compute_feat(model: torch.nn.Module,
             data[k] = data[k].to(device)
 
         with torch.no_grad():
-            try:
-                last_hidden_state, feat = model.module.gen_feature_embeddings(
-                    data['input_ids'], data['attention_mask'])
-            except:
-                last_hidden_state, feat = model.gen_feature_embeddings(
-                    data['input_ids'], data['attention_mask'])
+            # try:
+            #     last_hidden_state, feat = model.module.gen_feature_embeddings(
+            #         data['input_ids'], data['attention_mask'])
+            # except:
+            last_hidden_state, feat = model.gen_feature_embeddings(
+                data['input_ids'], data['attention_mask'])
 
         feat = feat.detach()
         feats.extend(feat.data.tolist())
@@ -150,15 +150,14 @@ def feature_embedding_analysis(source_dataset: MFData,
                                             batch_size)
 
     s_feats.extend(t_feats)
-    print(source_dataset.__dict__)
-    s_domain_labels = source_dataset.domain_labels
-    t_domain_labels = target_dataset.domain_labels
-    s_domain_labels.extend(t_domain_labels)
-    s_feats = np.array(s_feats)
-    s_domain_labels = np.array(s_domain_labels).squeeze()
+    feats = np.array(s_feats)
 
-    np.savetxt(fig_save_path + '/feat_embeddings.tsv', s_feats)
-    np.savetxt(fig_save_path + '/domain_labels.tsv', s_domain_labels)
+    s_domain_labels = source_dataset.dataset.domain_labels
+    t_domain_labels = target_dataset.dataset.domain_labels
+    domain_labels = np.hstack((s_domain_labels,t_domain_labels)).squeeze()
 
-    plot_heatmap(s_feats, s_domain_labels, fig_save_path)
-    plot_tsne(s_feats, s_domain_labels, fig_save_path)
+    np.savetxt(fig_save_path + '/feat_embeddings.tsv', feats)
+    np.savetxt(fig_save_path + '/domain_labels.tsv', domain_labels)
+
+    plot_heatmap(feats, domain_labels, fig_save_path)
+    plot_tsne(feats, domain_labels, fig_save_path)

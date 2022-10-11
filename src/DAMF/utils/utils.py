@@ -30,20 +30,13 @@ def get_gpu_memory_map():
     returns a dict: key - device id int; val - memory usage in GB (int).
     """
     device = "cuda:0" if torch.cuda.is_available() else "cpu"
+
     if device == "cpu":
         return {
             'cpu_count': os.cpu_count(),
             '% RAM used': psutil.virtual_memory()[2]
         }
-
-    # result = subprocess.check_output([
-    #     'nvidia-smi', '--query-gpu=memory.used',
-    #     '--format=csv,nounits,noheader'
-    # ],
-    #                                  encoding='utf-8')
-    ## Convert lines into a dictionary
-    # gpu_memory = [int(x) for x in result.strip().split('\n')]
-    # gpu_memory_map = dict(zip(range(len(gpu_memory)), gpu_memory))
+        
     gpu_memory_map = {}
     for i in range(count_devices()):
         gpu_memory_map[i] = round(torch.cuda.memory_allocated(i)/1024/1024/1024,2)

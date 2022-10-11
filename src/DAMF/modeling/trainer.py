@@ -56,8 +56,8 @@ class DomainAdaptTrainer:
 
         self.model_embedding_dim = self.model.embedding_dim
 
-        if torch.cuda.device_count() > 1:
-            self.model = torch.nn.DataParallel(self.model)
+        # if torch.cuda.device_count() > 1:
+        self.model = torch.nn.DataParallel(self.model)
 
         self.model = self.model.to(self.args['device'])
 
@@ -179,15 +179,9 @@ class DomainAdaptTrainer:
         Balance between positive and negative examples, and balance among different classes, with # neg examples / # pos examples
         """
         if self.args['semi_supervised']:
-            # labels = self.datasets['s_train'].mf_labels
             data_name = 's_train'
-            # n_pos = np.sum(self.datasets['s_train'].mf_labels, axis=0).reshape(-1)
-            # len_labels = len(self.datasets['s_train'].mf_labels)
         else:
             data_name = 'train'
-            # labels = self.datasets['train'].mf_labels
-            # n_pos = np.sum(self.datasets['train'].mf_labels, axis=0).reshape(-1)
-            # len_labels = len(self.datasets['train'].mf_labels)
 
         n_pos = np.sum(self.datasets[data_name].mf_labels, axis=0).reshape(-1)
         n_pos = np.where(n_pos == 0, 1, n_pos)
@@ -286,7 +280,7 @@ class DomainAdaptTrainer:
         best_epoch = 0
 
         for epoch in range(self.args['n_epoch']):
-            
+
             self.model.train()
 
             is_adv = False
@@ -324,14 +318,14 @@ class DomainAdaptTrainer:
                      self.print_loss(loss_mf), self.print_loss(loss_domain),
                      self.print_loss(loss_rec), self.print_loss(loss_trans)))
 
-                # save temp model
-                torch.save(self.model,
-                           self.args['output_dir'] + '/model_in_training.pth')
+                # # save temp model
+                # torch.save(self.model.module,
+                #            self.args['output_dir'] + '/model_in_training.pth')
 
             # test on validation set
             accu = evaluate(self.datasets['val'],
                             self.args['batch_size'],
-                            model=self.model,
+                            model=self.model.module,
                             is_adv=is_adv)
             logging.info(f'\nepoch: {epoch}')
             logging.info('Macro F1 of the VAL dataset: %.3f' % accu)
@@ -339,13 +333,13 @@ class DomainAdaptTrainer:
             if accu > best_accu:
                 best_accu = accu
                 best_epoch = epoch
-                torch.save(self.model,
+                torch.save(self.model.module,
                            self.args['output_dir'] + '/best_model.pth')
 
             if self.args['reconstruction'] and epoch == (
                     self.args['num_no_adv'] - 1):
                 # compute feature embeddings and save in the dataset object
-                compute_feat(self.model, self.datasets['train'],
+                compute_feat(self.model.module, self.datasets['train'],
                              self.args['device'], self.args['batch_size'])
 
             # update lr scheduler
@@ -457,7 +451,6 @@ class DomainAdaptTrainer:
                     # balance loss between source and target
                     loss = loss + (s_train_batch_size /
                                    t_train_batch_size) * t_loss + s_loss_trans
-                logging.info('GPU/CPU usage (GB): %s' % get_gpu_memory_map())
 
                 loss.backward()
                 self.optimizer.step()
@@ -478,15 +471,15 @@ class DomainAdaptTrainer:
 
                 del loss
 
-                # save temp model
-                torch.save(self.model,
-                           self.args['output_dir'] + '/model_in_training.pth')
+                # # save temp model
+                # torch.save(self.model.module,
+                #            self.args['output_dir'] + '/model_in_training.pth')
 
             # test on source validation set
             logging.info(f'\nepoch: {epoch}')
             accu_s = evaluate(self.datasets['s_val'],
                               self.args['batch_size'],
-                              model=self.model,
+                              model=self.model.module,
                               is_adv=is_adv)
             logging.info('Macro F1 of the %s dataset: %f' % ('source', accu_s))
             # test on target val set if its label exists
@@ -494,7 +487,7 @@ class DomainAdaptTrainer:
                     't_val'].mf_labels is not None:
                 accu_t = evaluate(self.datasets['t_val'],
                                   self.args['batch_size'],
-                                  model=self.model,
+                                  model=self.model.module,
                                   is_adv=is_adv)
                 logging.info('Macro F1 of the %s dataset: %f\n' %
                              ('target', accu_t))
@@ -502,22 +495,22 @@ class DomainAdaptTrainer:
                     best_accu_s = accu_s
                     best_accu_t = accu_t
                     best_epoch = epoch
-                    torch.save(self.model,
+                    torch.save(self.model.module,
                                self.args['output_dir'] + '/best_model.pth')
             else:
                 if accu_s > best_accu_s and epoch >= self.args['num_no_adv']:
                     best_accu_s = accu_s
                     best_epoch = epoch
-                    torch.save(self.model,
+                    torch.save(self.model.module,
                                self.args['output_dir'] + '/best_model.pth')
 
             # if computing rec loss, at the end of non adversarial training, record the model as the basic mf predicting model without domain adapt, the feature embeddings calculated from this mode will be the original embed
             if self.args['reconstruction'] and epoch == (
                     self.args['num_no_adv'] - 1):
                 # compute feature embeddings and save in the dataset object
-                compute_feat(self.model, self.datasets['s_train'],
+                compute_feat(self.model.module, self.datasets['s_train'],
                              self.args['device'], self.args['batch_size'])
-                compute_feat(self.model, self.datasets['t_train'],
+                compute_feat(self.model.module, self.datasets['t_train'],
                              self.args['device'], self.args['batch_size'])
 
             # update lr scheduler

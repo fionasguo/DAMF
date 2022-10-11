@@ -115,7 +115,7 @@ if __name__ == '__main__':
     # args
     args = {}
     mode, args = read_command_args(args)
-    print(args)
+
     args = read_config(os.path.dirname(os.path.realpath(__file__)), args)
 
     # set seed
@@ -176,13 +176,13 @@ if __name__ == '__main__':
                      ('target', test_accu))
 
         # plot feature embedding heapmaps and tsne for domain adapt cases
-        # if 's_train' in datasets:
-        #     logging.info('performing feature embedding analysis')
-        #     feature_embedding_analysis(datasets['s_train'],
-        #                                datasets['t_train'],
-        #                                args['output_dir'],
-        #                                args['batch_size'],
-        #                                model_path=eval_model_path)
+        if 's_train' in datasets:
+            logging.info('performing feature embedding analysis')
+            feature_embedding_analysis(datasets['s_train'],
+                                       datasets['t_train'],
+                                       args['output_dir'],
+                                       args['batch_size'],
+                                       model_path=eval_model_path)
 
         logging.info(
             f"Finished evaluating test data {args['test_domain']}. Time: {time.time()-start_time}"

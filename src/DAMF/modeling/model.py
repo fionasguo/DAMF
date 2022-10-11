@@ -43,7 +43,6 @@ class MFBasic(torch.nn.Module):
     def forward(self, input_ids, att_mask):
 
         feature = self.feature(input_ids=input_ids, attention_mask=att_mask)
-        # pooler_output = feature.pooler_output
 
         class_output = self.mf_classifier(feature.pooler_output)
 
@@ -52,8 +51,6 @@ class MFBasic(torch.nn.Module):
     def gen_feature_embeddings(self, input_ids, att_mask):
 
         feature = self.feature(input_ids=input_ids, attention_mask=att_mask)
-        # last_hidden_state = feature.last_hidden_state
-        # pooler_output = feature.pooler_output
 
         return feature.last_hidden_state, feature.pooler_output
 
@@ -86,12 +83,6 @@ class MFDomainAdapt(torch.nn.Module):
 
         super(MFDomainAdapt, self).__init__()
 
-        # if is_training:
-        #     self.feature = AutoModel.from_pretrained(pretrained_dir)
-        # else:
-        #     self.pretrained_config = AutoConfig.from_pretrained(pretrained_dir, local_files_only=True)
-        #     self.feature = AutoModel.from_config(self.pretrained_config)
-
         self.n_mf_classes = n_mf_classes
         self.n_domain_classes = n_domain_classes
         self.has_rec = has_rec
@@ -117,8 +108,6 @@ class MFDomainAdapt(torch.nn.Module):
     def gen_feature_embeddings(self, input_ids, att_mask):
 
         feature = self.feature(input_ids=input_ids, attention_mask=att_mask)
-        # last_hidden_state = feature.last_hidden_state
-        # pooler_output = feature.pooler_output
 
         return feature.last_hidden_state, feature.pooler_output
 
@@ -146,7 +135,6 @@ class MFDomainAdapt(torch.nn.Module):
             rec_embeddings = self.rec_module(last_hidden_state)
 
         # domain-invariant transformation
-        # trans_W = None
         if self.has_trans and adv:
             pooler_output = self.trans_module(pooler_output)
 
@@ -161,9 +149,8 @@ class MFDomainAdapt(torch.nn.Module):
         # connect to domain classifier with gradient reversal
         domain_output = None
         if adv:
-            # reverse_pooler_output = ReverseLayerF.apply(
-            #     pooler_output, lambda_domain)
-            domain_output = self.domain_classifier(ReverseLayerF.apply(pooler_output, lambda_domain))
+            domain_output = self.domain_classifier(
+                ReverseLayerF.apply(pooler_output, lambda_domain))
 
         return {
             'class_output': class_output,
