@@ -18,7 +18,7 @@ def predict(model: torch.nn.Module,
             device: str,
             batch_size: int = 64,
             domain_adapt: bool = True,
-            is_adv: bool = True) -> Tuple[List, List]:
+            is_adv: bool = True) -> Tuple[List, List, List]:
     """
     Predict MF and/or domain labels based on given model.
 
@@ -81,7 +81,7 @@ def predict(model: torch.nn.Module,
 
         i += 1
 
-    return mf_preds, mf_preds_conf
+    return mf_preds, mf_preds_conf, domain_preds
 
 
 def evaluate(dataset: MFData,
@@ -127,7 +127,7 @@ def evaluate(dataset: MFData,
     domain_adapt = (isinstance(model, MFDomainAdapt))
 
     # predict
-    mf_preds, mf_preds_conf = predict(
+    mf_preds,_, domain_preds = predict(
         model, dataset, device, batch_size, domain_adapt, is_adv)
 
     # print reports
