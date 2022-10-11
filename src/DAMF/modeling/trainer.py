@@ -11,12 +11,12 @@ import torch.optim as optim
 from torch.optim.lr_scheduler import LambdaLR
 from torch.utils.data import DataLoader
 
-from src.data_processing.data_loader import MFData
-from src.modeling.modules import ReconstructionLoss, TransformationLoss
-from src.modeling.model import MFBasic, MFDomainAdapt
-from src.modeling.evaluate import evaluate
-from src.utils.feature_analysis import compute_feat
-from src.utils.utils import get_gpu_memory_map, count_devices
+from DAMF.data_processing.data_loader import MFData
+from .modules import ReconstructionLoss, TransformationLoss
+from .model import MFBasic, MFDomainAdapt
+from .evaluate import evaluate
+from DAMF.utils.feature_analysis import compute_feat
+from DAMF.utils.utils import get_gpu_memory_map, count_devices
 
 
 class DomainAdaptTrainer:

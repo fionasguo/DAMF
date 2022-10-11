@@ -9,8 +9,8 @@ from sklearn import metrics
 import logging
 from typing import Tuple, List
 
-from src.modeling.model import MFBasic, MFDomainAdapt
-from src.data_processing.data_loader import MFData
+from .model import MFBasic, MFDomainAdapt
+from DAMF.data_processing.data_loader import MFData
 
 
 def predict(model: torch.nn.Module,
@@ -44,9 +44,8 @@ def predict(model: torch.nn.Module,
     i = 0
 
     mf_preds = []
-    #mf_labels = []
+    mf_preds_conf = []
     domain_preds = []
-    #domain_labels = []
 
     while i < len_dataloader:
         data_target, _ = data_target_iter.next()
@@ -65,6 +64,7 @@ def predict(model: torch.nn.Module,
                                 adv=is_adv)
 
         mf_pred_confidence = torch.sigmoid(outputs['class_output'])
+        mf_preds_conf.extend(mf_pred_confidence.to('cpu').tolist())
         mf_pred = ((mf_pred_confidence) >= 0.5).long()
         mf_preds.extend(mf_pred.to('cpu').tolist())
         # in case no label available
@@ -81,7 +81,7 @@ def predict(model: torch.nn.Module,
 
         i += 1
 
-    return mf_preds, domain_preds
+    return mf_preds, mf_preds_conf
 
 
 def evaluate(dataset: MFData,
@@ -127,7 +127,7 @@ def evaluate(dataset: MFData,
     domain_adapt = (isinstance(model, MFDomainAdapt))
 
     # predict
-    mf_preds, domain_preds = predict(
+    mf_preds, mf_preds_conf = predict(
         model, dataset, device, batch_size, domain_adapt, is_adv)
 
     # print reports

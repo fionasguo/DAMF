@@ -36,15 +36,18 @@ import logging
 import argparse
 import transformers
 
-from src.data_processing.read_data import read_data
-from src.modeling.trainer import DomainAdaptTrainer
-from src.modeling.evaluate import evaluate
-from src.utils.feature_analysis import feature_embedding_analysis
-from src.utils.utils import read_config, set_seed
+from DAMF import read_data
+from DAMF import DomainAdaptTrainer
+from DAMF import evaluate
+from DAMF import feature_embedding_analysis
+from DAMF import read_config, set_seed
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-def read_command_args():
+
+def read_command_args(args):
+    """Read arguments from command line."""
+
     parser = argparse.ArgumentParser(
         description='Domain adaptation model for moral foundation inference.')
     parser.add_argument('-m',
@@ -54,7 +57,7 @@ def read_command_args():
                         help='train,test,or train_test')
     parser.add_argument(
         '-c',
-        '--config_path',
+        '--config_dir',
         type=str,
         required=True,
         help='configuration file dir that specifies hyperparameters etc')
@@ -68,16 +71,36 @@ def read_command_args():
                         type=str,
                         required=True,
                         help='output directory')
-    parser.add_argument('-t',
-                        '--test_model',
-                        type=str,
-                        required=False,
-                        help='if testing, it is optional to provide a trained model weight dir')
+    parser.add_argument(
+        '-t',
+        '--test_model',
+        type=str,
+        required=False,
+        help='if testing, it is optional to provide a trained model weight dir'
+    )
     command_args = parser.parse_args()
 
+    # mode
     mode = command_args.mode
 
-    return mode, command_args
+    ## add dirs into args
+    curr_dir = os.path.dirname(os.path.realpath(__file__))
+    # data dir
+    args['data_dir'] = os.path.join(curr_dir, command_args.data_dir)
+    # output_dir
+    args['output_dir'] = os.path.join(curr_dir, command_args.output_dir)
+    if not os.path.exists(args['output_dir']):
+        os.makedirs(args['output_dir'])
+    # config dir
+    args['config_dir'] = os.path.join(curr_dir, command_args.config_dir)
+    # provided trained model weights for testing, optional
+    try:
+        args['mf_model_dir'] = os.path.join(curr_dir, command_args.test_model)
+    except:
+        args['mf_model_dir'] = None
+
+    return mode, args
+
 
 if __name__ == '__main__':
     # logger
@@ -90,8 +113,10 @@ if __name__ == '__main__':
                         level=logging.DEBUG)
 
     # args
-    mode, command_args = read_command_args()
-    args = read_config(command_args)
+    args = {}
+    mode, args = read_command_args(args)
+    print(args)
+    args = read_config(os.path.dirname(os.path.realpath(__file__)), args)
 
     # set seed
     set_seed(args['seed'])

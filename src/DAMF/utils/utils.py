@@ -62,10 +62,16 @@ def count_devices():
     return n_devices
 
 
-def read_config(command_args):
+def read_config(curr_dir, args):
+    """
+    Read arguments from the config file.
+
+    Args:
+        curr_dir: the directory where the main script is being run
+        args: a dict to store arguments, should at least include 'config_dir'
+    """
     # read args in config file
-    args = {}
-    with open(command_args.config_path, 'r') as f:
+    with open(args['config_dir'], 'r') as f:
         for l in f.readlines():
             # skip comments
             if l.strip() == '' or l.strip().startswith('#'):
@@ -76,25 +82,9 @@ def read_config(command_args):
 
             args[arg_name] = arg_val
 
-    DAMF_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)),
-                            "../..")
-
     ## format each arg
-    # data dir
-    args['data_dir'] = os.path.join(DAMF_dir, 'data', command_args.data_dir)
-    # output_dir
-    args['output_dir'] = os.path.join(DAMF_dir, command_args.output_dir)
-    if not os.path.exists(args['output_dir']):
-        os.makedirs(args['output_dir'])
     # pretrained model dir
-    args['pretrained_dir'] = os.path.join(DAMF_dir, 'trained_models',
-                                          args['pretrained_dir'])
-    # provided trained model weights for testing, optional
-    try:
-        args['mf_model_dir'] = os.path.join(DAMF_dir, 'trained_models',
-                                        command_args.mf_model_dir)
-    except:
-        args['mf_model_dir'] = None
+    args['pretrained_dir'] = os.path.join(curr_dir, args['pretrained_dir'])
     # booleans
     args['domain_adapt'] = literal_eval(args['domain_adapt'])
     args['transformation'] = literal_eval(args['transformation'])

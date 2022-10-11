@@ -11,32 +11,64 @@ run git clone of the repo.
 ```
 git clone https://github.com/fionasguo/DAMF.git
 ```
+setup the package
+```
+python setup.py install
+```
 
 ## Dependencies
 
-Install all dependencies in [`requirments.txt`](https://github.com/fionasguo/DAMF/blob/master/requirements.txt)
+Will be automatically installed when running setup.py.
+
+All dependencies are in [`requirments.txt`](https://github.com/fionasguo/DAMF/blob/master/requirements.txt)
 
 ## Use the code
 
 <!-- dd -->
 
-### Run the code
-First, make sure to put training and/or test data under the folder [`data`](https://github.com/fionasguo/DAMF/tree/master/data).
+### Run the example code
 
-Then, make sure to put vanilla pretrained language model files under the folder [`trained_models`](https://github.com/fionasguo/DAMF/tree/master/trained_models).
+#### To train (and test):
 
-Then run:
+Put the data (eg. xxxxx.csv) under the folder [`data`](https://github.com/fionasguo/DAMF/tree/master/data)
+
+Put the pretrained language model file (used to initiate DAMF) under the folder [`trained_models`](https://github.com/fionasguo/DAMF/tree/master/trained_models)
+
+Change the config file accordingly, see details below for the config file
+
+Given a single csv data file with all data included, the program will automatically split it into train/val/test sets, run:
 
 ```
-python3 train_and_test.py -m train_test -c config -i mf_data.csv -o tmp
+python3 train_and_test.py -m train_test -c config -i data/all_mf_data.csv -o outputs
+```
+
+Given a directory to separate csv files each for a train/val/test set, run:
+
+```
+python3 train_and_test.py -m train_test -c config -i data/mf_datasets -o outputs
+```
+
+#### To test using a trained DAMF model:
+
+Put the data (eg. xxxxx.csv) under the folder [`data`](https://github.com/fionasguo/DAMF/tree/master/data)
+
+Put the trained DAMF model file under the folder [`trained_models`](https://github.com/fionasguo/DAMF/tree/master/trained_models) (e.g. trained_models/ckpt)
+
+Change the config file accordingly
+
+Run:
+
+```
+python3 train_and_test.py -m test -c config -i data/all_mf_data.csv -o outputs -t trained_models/ckpt
 ```
 
 Arguments:
 
-- -m: mode, train, test, or train_test 
-- -c: path to config file, see details below for the config fiile
-- -i: input data dir, eg. mf_data.csv, should be under the folder [`data`](https://github.com/fionasguo/DAMF/tree/master/data)
-- -o: output dir, eg. tmp
+- -m: mode, options: train, test, or train_test
+- -c: path to the config file
+- -i: input data dir, can be a single csv path including all train, val, test data, or a directory including separate csv files each for a train/val/test set
+- -o: output dir, eg. ./outputs
+- -t: test_model, an already trained DAMF model file for testing
 
 
 ### Config file
@@ -44,8 +76,8 @@ see an example config file [`config`](https://github.com/fionasguo/DAMF/blob/mas
 
 All arguments:
 
-- pretrained_dir: str, pretrained LM model for tokenzier and initial feature encoder weights, these should be stored in the folder [`trained_models`](https://github.com/fionasguo/DAMF/tree/master/trained_models), eg. 'bert-base-uncased'
-- mf_model_dir: (optional) str, previously trained model path of this model, can be used for testing, these should be stored in the folder [`trained_models`](https://github.com/fionasguo/DAMF/tree/master/trained_models)
+- pretrained_dir: str, pretrained LM model for initializing tokenzier and initializing feature encoder, eg. 'trained_models/bert-base-uncased'
+- mf_model_dir: (optional) str, previously trained DAMF model path, can be used for testing, eg. 'trained_models/ckpt'
 - domain_adapt: bool, whether to use domain adversarial training
 - transformation: bool, whether to include a linear transformation module to facilitate domain-invariant feature generation
 - reconstruction: bool, whether to include a reconstruction module to keep feature encoder from overly corruption by adversarial training

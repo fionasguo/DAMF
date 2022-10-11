@@ -10,3 +10,6 @@ tmp/*
 *DS_Store*
 hp_search.py
 evaluate_seeds.py
+build/*
+dist/*
+*egg-info*

@@ -14,9 +14,9 @@ from typing import List, Tuple, Dict
 
 from transformers import AutoTokenizer
 
-from src.data_processing.preprocessing import preprocess_tweet
-from src.data_processing.data_loader import MFData
-from src.data_processing.train_test_split import gen_in_domain_data, gen_out_domain_data, gen_semi_supervised
+from .preprocessing import preprocess_tweet
+from .data_loader import MFData
+from .train_test_split import gen_in_domain_data, gen_out_domain_data, gen_semi_supervised
 
 pd.options.mode.chained_assignment = None
 
@@ -34,7 +34,8 @@ def create_MFData(df: pd.DataFrame,
                                  padding="max_length").tolist()
 
     # some dataset might not have mf labels, eg t_train or test data
-    if any([l not in df.columns for l in mf_label_names]) or df[mf_label_names].isnull().values.any():
+    if any([l not in df.columns for l in mf_label_names
+            ]) or df[mf_label_names].isnull().values.any():
         # if any of the mf labels is not in the data columns, or if any of the mf label columns has NaN values
         mf_labels = None
     else:
@@ -48,11 +49,11 @@ def create_MFData(df: pd.DataFrame,
 
 
 def train_test_split(data_dir: str,
-              train_domain: List[str],
-              test_domain: List[str],
-              semi_supervised: bool,
-              train_frac: float = 0.8,
-              seed: int = 3) -> Dict[str, pd.DataFrame]:
+                     train_domain: List[str],
+                     test_domain: List[str],
+                     semi_supervised: bool,
+                     train_frac: float = 0.8,
+                     seed: int = 3) -> Dict[str, pd.DataFrame]:
     """
     Generate train/dev/test datasets.
 
@@ -102,8 +103,8 @@ def train_test_split(data_dir: str,
 
     return dataset_dict
 
-def load_data(data_dir: str,
-              train_domain: List[str],
+
+def load_data(data_dir: str, train_domain: List[str],
               test_domain: List[str]) -> Dict[str, pd.DataFrame]:
     """
     Directly load data from files.
@@ -114,13 +115,14 @@ def load_data(data_dir: str,
         if not file.endswith('.csv'):
             continue
         data_name = os.path.basename(file).split('.')[0]
-        df = pd.read_csv(os.path.join(data_dir,file))
+        df = pd.read_csv(os.path.join(data_dir, file))
 
         df['domain_idx'] = df['domain'].apply(lambda x: domains.index(x))
 
         dataset_dict[data_name] = df
 
     return dataset_dict
+
 
 def read_data(data_dir: str,
               tokenizer_path: str,
@@ -166,12 +168,8 @@ def read_data(data_dir: str,
         dataset_dict = load_data(data_dir, train_domain, test_domain)
     else:
         # if data_dir is a csv, peform train test split
-        dataset_dict = train_test_split(data_dir,
-                                        train_domain,
-                                        test_domain,
-                                        semi_supervised,
-                                        train_frac,
-                                        seed)
+        dataset_dict = train_test_split(data_dir, train_domain, test_domain,
+                                        semi_supervised, train_frac, seed)
 
     # init the tokenzier
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_path,

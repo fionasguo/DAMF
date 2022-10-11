@@ -6,8 +6,8 @@ import torch
 import transformers
 from transformers import AutoModel, AutoConfig
 
-from src.modeling.grad_rev_fn import ReverseLayerF
-from src.modeling.modules import FFClassifier, Reconstruction, Transformation
+from .grad_rev_fn import ReverseLayerF
+from .modules import FFClassifier, Reconstruction, Transformation
 
 transformers.logging.set_verbosity_error()
 

@@ -5,7 +5,7 @@ Define modules used in the model: feedforward, reconstruction, transformation.
 import torch
 from torch.autograd import Function
 
-from src.utils.utils import count_devices
+from DAMF.utils.utils import count_devices
 
 ########### Feed Forward Classifier ###########
 

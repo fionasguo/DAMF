@@ -1,4 +1,4 @@
-pretrained_dir = xlm-roberta-base
+pretrained_dir = trained_models/twitter-xlm-roberta-base
 
 domain_adapt = True
 transformation = True
