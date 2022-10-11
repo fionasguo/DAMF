@@ -2,6 +2,7 @@
 Functions for inference - predict and evaluate
 """
 
+import numpy as np
 import torch
 from torch.utils.data import DataLoader
 from sklearn import metrics
@@ -17,7 +18,7 @@ def predict(model: torch.nn.Module,
             device: str,
             batch_size: int = 64,
             domain_adapt: bool = True,
-            is_adv: bool = True) -> Tuple[List, List, List, List]:
+            is_adv: bool = True) -> Tuple[List, List]:
     """
     Predict MF and/or domain labels based on given model.
 
@@ -43,9 +44,9 @@ def predict(model: torch.nn.Module,
     i = 0
 
     mf_preds = []
-    mf_labels = []
+    #mf_labels = []
     domain_preds = []
-    domain_labels = []
+    #domain_labels = []
 
     while i < len_dataloader:
         data_target, _ = data_target_iter.next()
@@ -67,20 +68,20 @@ def predict(model: torch.nn.Module,
         mf_pred = ((mf_pred_confidence) >= 0.5).long()
         mf_preds.extend(mf_pred.to('cpu').tolist())
         # in case no label available
-        try:
-            mf_labels.extend(data_target['mf_labels'].to('cpu').tolist())
-        except:
-            pass
+        # try:
+        #     mf_labels.extend(data_target['mf_labels'].to('cpu').tolist())
+        # except:
+        #     pass
 
         if domain_adapt and is_adv:
             domain_pred = outputs['domain_output'].data.max(1, keepdim=True)[1]
             domain_preds.extend(domain_pred.to('cpu').tolist())
-            domain_labels.extend(
-                data_target['domain_labels'].to('cpu').tolist())
+            # domain_labels.extend(
+            #     data_target['domain_labels'].to('cpu').tolist())
 
         i += 1
 
-    return mf_preds, mf_labels, domain_preds, domain_labels
+    return mf_preds, domain_preds
 
 
 def evaluate(dataset: MFData,
@@ -126,29 +127,34 @@ def evaluate(dataset: MFData,
     domain_adapt = (isinstance(model, MFDomainAdapt))
 
     # predict
-    mf_preds, mf_labels, domain_preds, domain_labels = predict(
+    mf_preds, domain_preds = predict(
         model, dataset, device, batch_size, domain_adapt, is_adv)
 
     # print reports
-    mf_report = metrics.classification_report(mf_labels,
+    # first add a column for non-moral
+    # mf_preds = np.array(mf_preds)
+    # mf_preds = np.hstack((mf_preds,(np.sum(mf_preds,axis=1)==0).astype(int).reshape(-1,1)))
+    # mf_labels = np.array(dataset.mf_labels)
+    # mf_labels = np.hstack((mf_labels,(np.sum(mf_labels,axis=1)==0).astype(int).reshape(-1,1)))
+    mf_report = metrics.classification_report(dataset.mf_labels,
                                               mf_preds,
                                               zero_division=0)
     logging.debug('MF classification report:')
     logging.debug(mf_report)
-    conf_matrix = metrics.multilabel_confusion_matrix(mf_labels, mf_preds)
+    conf_matrix = metrics.multilabel_confusion_matrix(dataset.mf_labels, mf_preds)
     logging.debug('MF classification confusion matrix:')
     logging.debug(conf_matrix)
-    mf_report = metrics.classification_report(mf_labels,
+    mf_report = metrics.classification_report(dataset.mf_labels,
                                               mf_preds,
                                               zero_division=0,
                                               output_dict=True)
     macro_f1 = mf_report['weighted avg']['f1-score']
 
     if domain_adapt and is_adv:
-        domain_report = metrics.classification_report(domain_labels,
+        domain_report = metrics.classification_report(dataset.domain_labels,
                                                       domain_preds,
                                                       zero_division=0)
-        conf_matrix = metrics.confusion_matrix(domain_labels, domain_preds)
+        conf_matrix = metrics.confusion_matrix(dataset.domain_labels, domain_preds)
         logging.debug('Domain classification report:')
         logging.debug(domain_report)
         logging.debug('Domain classification confusion matrix:')

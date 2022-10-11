@@ -43,19 +43,19 @@ class MFBasic(torch.nn.Module):
     def forward(self, input_ids, att_mask):
 
         feature = self.feature(input_ids=input_ids, attention_mask=att_mask)
-        pooler_output = feature.pooler_output
+        # pooler_output = feature.pooler_output
 
-        class_output = self.mf_classifier(pooler_output)
+        class_output = self.mf_classifier(feature.pooler_output)
 
         return {'class_output': class_output}
 
     def gen_feature_embeddings(self, input_ids, att_mask):
 
         feature = self.feature(input_ids=input_ids, attention_mask=att_mask)
-        last_hidden_state = feature.last_hidden_state
-        pooler_output = feature.pooler_output
+        # last_hidden_state = feature.last_hidden_state
+        # pooler_output = feature.pooler_output
 
-        return last_hidden_state, pooler_output
+        return feature.last_hidden_state, feature.pooler_output
 
 
 class MFDomainAdapt(torch.nn.Module):
@@ -117,10 +117,10 @@ class MFDomainAdapt(torch.nn.Module):
     def gen_feature_embeddings(self, input_ids, att_mask):
 
         feature = self.feature(input_ids=input_ids, attention_mask=att_mask)
-        last_hidden_state = feature.last_hidden_state
-        pooler_output = feature.pooler_output
+        # last_hidden_state = feature.last_hidden_state
+        # pooler_output = feature.pooler_output
 
-        return last_hidden_state, pooler_output
+        return feature.last_hidden_state, feature.pooler_output
 
     def forward(self,
                 input_ids,
@@ -146,28 +146,27 @@ class MFDomainAdapt(torch.nn.Module):
             rec_embeddings = self.rec_module(last_hidden_state)
 
         # domain-invariant transformation
-        trans_W = None
+        # trans_W = None
         if self.has_trans and adv:
-            pooler_output, trans_W = self.trans_module(pooler_output)
+            pooler_output = self.trans_module(pooler_output)
 
         # concat domain features onto pretrained LM embeddings before sending to MF classifier
         domain_feature = torch.nn.functional.one_hot(
             domain_labels, num_classes=self.n_domain_classes).squeeze(1)
-        class_input = torch.cat((pooler_output, domain_feature), dim=1)
+        class_output = torch.cat((pooler_output, domain_feature), dim=1)
 
         # connect to mf classifier
-        class_output = self.mf_classifier(class_input)
+        class_output = self.mf_classifier(class_output)
 
         # connect to domain classifier with gradient reversal
         domain_output = None
         if adv:
-            reverse_pooler_output = ReverseLayerF.apply(
-                pooler_output, lambda_domain)
-            domain_output = self.domain_classifier(reverse_pooler_output)
+            # reverse_pooler_output = ReverseLayerF.apply(
+            #     pooler_output, lambda_domain)
+            domain_output = self.domain_classifier(ReverseLayerF.apply(pooler_output, lambda_domain))
 
         return {
             'class_output': class_output,
             'domain_output': domain_output,
-            'rec_embed': rec_embeddings,
-            'trans_W': trans_W
+            'rec_embed': rec_embeddings
         }

@@ -21,7 +21,7 @@ logging.getLogger('matplotlib').setLevel(logging.ERROR)
 def compute_feat(model: torch.nn.Module,
                  dataset: MFData,
                  device: str,
-                 batch_size: int = 64) -> Tuple[List, List]:
+                 batch_size: int = 64) -> Tuple[List]:
     """
     Compute feature embeddings (both pooler outputs and last hidden states) for the given dataset using the given model.
 
@@ -46,8 +46,8 @@ def compute_feat(model: torch.nn.Module,
     i = 0
 
     feats = []
-    last_hidden_states = []
-    domain_labels = []
+    dataset.feat_embed = []
+    # domain_labels = []
 
     while i < len_dataloader:
         data, _ = data_iter.next()
@@ -66,15 +66,15 @@ def compute_feat(model: torch.nn.Module,
         feats.extend(feat.data.tolist())
 
         last_hidden_state = last_hidden_state.detach()
-        last_hidden_states.extend(last_hidden_state.to('cpu').tolist())
+        dataset.feat_embed.extend(last_hidden_state.to('cpu').tolist())
 
-        domain_labels.extend(data['domain_labels'].tolist())
+        # domain_labels.extend(data['domain_labels'].tolist())
 
         i += 1
 
-    dataset.feat_embed = last_hidden_states
+    # dataset.feat_embed = last_hidden_states
 
-    return feats, domain_labels
+    return feats
 
 
 def plot_heatmap(feats: List, domain_labels: List, fig_save_path: str):
@@ -145,18 +145,21 @@ def feature_embedding_analysis(source_dataset: MFData,
     target_dataset = Subset(target_dataset, target_random_idx)
 
     # get feature embeddings of source and target data from the best model (adv model)
-    s_feats, s_domain_labels = compute_feat(model, source_dataset, device,
+    s_feats = compute_feat(model, source_dataset, device,
                                             batch_size)
-    t_feats, t_domain_labels = compute_feat(model, target_dataset, device,
+    t_feats = compute_feat(model, target_dataset, device,
                                             batch_size)
 
     s_feats.extend(t_feats)
+    print(source_dataset.__dict__)
+    s_domain_labels = source_dataset.domain_labels
+    t_domain_labels = target_dataset.domain_labels
     s_domain_labels.extend(t_domain_labels)
-    feats = np.array(s_feats)
-    domain_labels = np.array(s_domain_labels).squeeze()
+    s_feats = np.array(s_feats)
+    s_domain_labels = np.array(s_domain_labels).squeeze()
 
-    np.savetxt(fig_save_path + '/feat_embeddings.tsv', feats)
-    np.savetxt(fig_save_path + '/domain_labels.tsv', domain_labels)
+    np.savetxt(fig_save_path + '/feat_embeddings.tsv', s_feats)
+    np.savetxt(fig_save_path + '/domain_labels.tsv', s_domain_labels)
 
-    plot_heatmap(feats, domain_labels, fig_save_path)
-    plot_tsne(feats, domain_labels, fig_save_path)
+    plot_heatmap(s_feats, s_domain_labels, fig_save_path)
+    plot_tsne(s_feats, s_domain_labels, fig_save_path)

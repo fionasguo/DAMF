@@ -39,7 +39,7 @@ class MFData(Dataset):
             item['domain_labels'] = torch.tensor(self.domain_labels[idx],
                                                  dtype=torch.long)
 
-        if self.feat_embed is not None:
+        if self.feat_embed is not None and len(self.feat_embed) == len(self.encodings):
             item['feat_embed'] = torch.tensor(self.feat_embed[idx],
                                               dtype=torch.float)
 

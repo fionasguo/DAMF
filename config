@@ -1,6 +1,4 @@
-pretrained_dir = twitter-xlm-roberta-base
-# pretrained_dir = bert-base-uncased
-# mf_model_dir = model_CovidCongress_MFTC_vanilla/model_in_training.pth
+pretrained_dir = xlm-roberta-base
 
 domain_adapt = True
 transformation = True
@@ -15,12 +13,12 @@ n_mf_classes = 5
 lr = 0.00005
 alpha = 10
 beta = 0.25
-batch_size = 256
-n_epoch = 100
+batch_size = 128
+n_epoch = 40
 dropout_rate = 0.3
-lambda_trans = 1
+lambda_trans = 0.01
 lambda_rec = 1
-num_no_adv = 40
-gamma = 10
+num_no_adv = 3
+gamma = 1
 
 seed = 3

@@ -92,7 +92,7 @@ class Transformation(torch.nn.Module):
 
     def forward(self, input):
         # input: (batch_size, embed_dim)
-        return self.l(input), self.l.weight
+        return self.l(input)
 
 
 class TransformationLoss(torch.nn.Module):
@@ -113,11 +113,11 @@ class TransformationLoss(torch.nn.Module):
         # if multiple gpu, W is concatenated together - need to check size first
         n_devices = count_devices()
 
-        W_blocks = torch.split(W, self.dim, 0)
+        W = torch.split(W, self.dim, 0)
 
         loss = torch.tensor(0.0, dtype=torch.float).to(self.device)
 
-        for w in W_blocks:
+        for w in W:
             loss += torch.norm(w - self.eye)**2
 
         loss /= n_devices

@@ -111,10 +111,12 @@ def load_data(data_dir: str,
     dataset_dict = {}
     domains = list(set(train_domain).union(set(test_domain)))
     for file in os.listdir(data_dir):
+        if not file.endswith('.csv'):
+            continue
         data_name = os.path.basename(file).split('.')[0]
         df = pd.read_csv(os.path.join(data_dir,file))
 
-        df['domain_idx'] = df.domain.apply(lambda x: domains.index(x))
+        df['domain_idx'] = df['domain'].apply(lambda x: domains.index(x))
 
         dataset_dict[data_name] = df
 

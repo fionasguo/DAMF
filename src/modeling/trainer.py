@@ -179,13 +179,20 @@ class DomainAdaptTrainer:
         Balance between positive and negative examples, and balance among different classes, with # neg examples / # pos examples
         """
         if self.args['semi_supervised']:
-            labels = self.datasets['s_train'].mf_labels
+            # labels = self.datasets['s_train'].mf_labels
+            data_name = 's_train'
+            # n_pos = np.sum(self.datasets['s_train'].mf_labels, axis=0).reshape(-1)
+            # len_labels = len(self.datasets['s_train'].mf_labels)
         else:
-            labels = self.datasets['train'].mf_labels
+            data_name = 'train'
+            # labels = self.datasets['train'].mf_labels
+            # n_pos = np.sum(self.datasets['train'].mf_labels, axis=0).reshape(-1)
+            # len_labels = len(self.datasets['train'].mf_labels)
 
-        n_pos = np.sum(labels, axis=0).reshape(-1)
+        n_pos = np.sum(self.datasets[data_name].mf_labels, axis=0).reshape(-1)
         n_pos = np.where(n_pos == 0, 1, n_pos)
-        weights = (len(labels) - n_pos) / n_pos
+        len_labels = len(self.datasets[data_name].mf_labels)
+        weights = (len_labels - n_pos) / n_pos
         weights = torch.tensor(weights, dtype=torch.float)
         return weights
 
@@ -232,7 +239,8 @@ class DomainAdaptTrainer:
         loss_trans = 0.0
         if self.args['transformation'] and is_adv and mf_loss:
             loss_trans = self.args['lambda_trans'] * \
-                self.loss_fn_trans(outputs['trans_W'])
+                self.loss_fn_trans(self.model.module.trans_module.l.weight)
+                ## TODO: modify this
             # loss += loss_trans
 
         return loss, loss_mf, loss_domain, loss_rec, loss_trans
@@ -278,7 +286,7 @@ class DomainAdaptTrainer:
         best_epoch = 0
 
         for epoch in range(self.args['n_epoch']):
-
+            
             self.model.train()
 
             is_adv = False
@@ -288,7 +296,6 @@ class DomainAdaptTrainer:
             data_iter = iter(self.train_dataloader)
 
             for i in range(self.len_dataloader):
-
                 data, _ = data_iter.next()
                 for k, v in data.items():
                     data[k] = data[k].to(self.args['device'])
@@ -450,6 +457,7 @@ class DomainAdaptTrainer:
                     # balance loss between source and target
                     loss = loss + (s_train_batch_size /
                                    t_train_batch_size) * t_loss + s_loss_trans
+                logging.info('GPU/CPU usage (GB): %s' % get_gpu_memory_map())
 
                 loss.backward()
                 self.optimizer.step()
@@ -467,6 +475,8 @@ class DomainAdaptTrainer:
                        self.print_loss(t_loss_domain),
                        self.print_loss(t_loss_rec),
                        self.print_loss(t_loss_trans)))
+
+                del loss
 
                 # save temp model
                 torch.save(self.model,
