@@ -323,7 +323,7 @@ class DomainAdaptTrainer:
                 #            self.args['output_dir'] + '/model_in_training.pth')
 
             # test on validation set
-            accu = evaluate(self.datasets['val'],
+            accu,_ = evaluate(self.datasets['val'],
                             self.args['batch_size'],
                             model=self.model.module,
                             is_adv=is_adv)
@@ -477,7 +477,7 @@ class DomainAdaptTrainer:
 
             # test on source validation set
             logging.info(f'\nepoch: {epoch}')
-            accu_s = evaluate(self.datasets['s_val'],
+            accu_s,_ = evaluate(self.datasets['s_val'],
                               self.args['batch_size'],
                               model=self.model.module,
                               is_adv=is_adv)
@@ -485,7 +485,7 @@ class DomainAdaptTrainer:
             # test on target val set if its label exists
             if 't_val' in self.datasets and self.datasets[
                     't_val'].mf_labels is not None:
-                accu_t = evaluate(self.datasets['t_val'],
+                accu_t,_ = evaluate(self.datasets['t_val'],
                                   self.args['batch_size'],
                                   model=self.model.module,
                                   is_adv=is_adv)

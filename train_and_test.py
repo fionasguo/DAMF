@@ -132,7 +132,8 @@ if __name__ == '__main__':
                          args['train_domain'],
                          args['test_domain'],
                          args['semi_supervised'],
-                         seed=args['seed'])
+                         seed=args['seed'],
+                         train_frac=0.9)
 
     logging.info(f'Finished processing data. Time: {time.time()-start_time}')
 
@@ -167,7 +168,7 @@ if __name__ == '__main__':
         if 'test' not in datasets or datasets['test'].mf_labels is None:
             raise ValueError('Invalid test dataset.')
         # evaluate
-        test_accu = evaluate(datasets['test'],
+        test_accu, mf_preds = evaluate(datasets['test'],
                              args['batch_size'],
                              model_path=eval_model_path,
                              is_adv=args['domain_adapt'],
@@ -175,6 +176,10 @@ if __name__ == '__main__':
         logging.info('Macro F1 of the %s TEST dataset: %f' %
                      ('target', test_accu))
 
+        # output predictions
+        with open(args['output_dir'] + '/mf_preds.csv','w',newline='') as f:
+            writer = csv.writer(f)
+            writer.writerows(mf_preds)
 
         logging.info(
             f"Finished evaluating test data {args['test_domain']}. Time: {time.time()-start_time}"
