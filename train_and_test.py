@@ -1,32 +1,5 @@
 """
 Domain adversarial network for Moral Foundation inference
-
-Command to run: python3 train_and_test.py -m train_test -c config
-
-All arguments:
-    data_dir: str, input data directory, can be set in command args or config file
-    output_dir: str, directory to write outputs, including trained model and predictions, can be set in command args or config file
-    domain_adapt: bool, whether to use domain adversarial training
-    transformation: bool, whether to include a linear transformation module to facilitate domain-invariant feature generation
-    reconstruction: bool, whether to include a reconstruction module to keep feature encoder from overly corruption by adversarial training
-    semi_supervised: bool, whether to use semi-supervised training where labeled source data and unlabeled target data are both used for training
-    train_domain: one str or a list, the source domain, eg. 'MFTC', or ['MFTC','congress']
-    test_domain: one str or a list, the target domain, eg. ['congress']
-    n_mf_classes: int, can be 10 (number of moral foundation classes) or 2 (moral vs immoral)
-    pretrained_dir: str, pretrained LM model for tokenzier and initial feature encoder weights eg. 'models/bert-base-uncased'
-    mf_model_dir: str, previou trained model path of this model
-    lr: learning rate
-    alpha, beta: float, for lr decay function, params to update learning rate: lr = lr_init/((1 +α·p)^β), where p = (curr_epoch − num_no_adv)/tot_epoch
-    max_seq_len: int, max sequence length for tokenizer
-    batch_size: int
-    num_epoch: int
-    dropout_rate: float
-    lambda_trans: float, for the transformation layer - regularization term in loss function
-    lambda_rec: float, regularization for reconstruction layer
-    num_no_adv: int (>0), after number of epoch with no adversarial training, start to use domain classifier by setting lambda_domain > 0 in the loss
-    gamma: float, rate to update lambda_domain (regularization coef for the domain classifier loss) over epochs, lambda_domain = 2/(1 + e^{−γ·p})-1
-    seed: int
-
 """
 
 import os
