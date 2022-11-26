@@ -10,15 +10,15 @@ test_domain = ['incas']
 
 n_mf_classes = 5
 
-lr = 0.00005
+lr = 0.00003
 alpha = 10
 beta = 0.25
-batch_size = 128
-n_epoch = 40
+batch_size = 64
+n_epoch = 50
 dropout_rate = 0.3
-lambda_trans = 0.01
+lambda_trans = 0.1
 lambda_rec = 1
-num_no_adv = 3
-gamma = 1
+num_no_adv = 5
+gamma = 15
 
 seed = 3

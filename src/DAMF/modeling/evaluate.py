@@ -154,4 +154,4 @@ def evaluate(dataset: MFData,
     if test:
         logger.setLevel(orig_level)
 
-    return macro_f1
+    return macro_f1, mf_preds
