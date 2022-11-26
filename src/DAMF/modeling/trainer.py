@@ -529,4 +529,6 @@ class DomainAdaptTrainer:
         logging.info('Corresponding model was save in ' +
                      self.args['output_dir'] + '/best_model.pth')
 
-        return best_accu_t
+        best_accu_return = best_accu_t if best_accu_t > 0.0 else best_accu_s
+
+        return best_accu_return
