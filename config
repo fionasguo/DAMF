@@ -1,20 +1,20 @@
-pretrained_dir = trained_models/bert-base-uncased
+pretrained_dir = trained_models/xlm-roberta-base
 
-domain_adapt = False
-transformation = False
-reconstruction = False
-semi_supervised = False
+domain_adapt = True
+transformation = True
+reconstruction = True
+semi_supervised = True
 
-train_domain = ['MFTC', 'congress', 'covid', 'eMFD']
-test_domain = ['MFTC', 'congress', 'covid', 'eMFD']
+train_domain = ['twitter','eMFD']
+test_domain = ['incas']
 
-n_mf_classes = 10
+n_mf_classes = 5
 
 lr = 0.00003
 alpha = 10
 beta = 0.25
 batch_size = 64
-n_epoch = 40
+n_epoch = 50
 dropout_rate = 0.3
 lambda_trans = 0.1
 lambda_rec = 1
