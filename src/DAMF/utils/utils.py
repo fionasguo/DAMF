@@ -83,6 +83,7 @@ def read_config(curr_dir, args):
     args['transformation'] = literal_eval(args['transformation'])
     args['reconstruction'] = literal_eval(args['reconstruction'])
     args['semi_supervised'] = literal_eval(args['semi_supervised'])
+    args['weighted_loss'] = literal_eval(args['weighted_loss'])
     # train/test domains
     if args['train_domain'][0] == '[':
         args['train_domain'] = literal_eval(args['train_domain'])

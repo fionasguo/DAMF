@@ -346,8 +346,8 @@ class DomainAdaptTrainer:
             self.scheduler.step()
 
             # log cpu/gpu usage
-            device_info = get_gpu_memory_map()
-            logging.info('GPU/CPU usage (MB): %s' % device_info)
+            # device_info = get_gpu_memory_map()
+            # logging.info('GPU/CPU usage (MB): %s' % device_info)
 
         logging.info('============ Training Summary ============= \n')
         logging.info(
@@ -389,8 +389,11 @@ class DomainAdaptTrainer:
                                   len(self.dataloaders['t_train']))
 
         # loss fn
-        self.loss_fn_mf = torch.nn.BCEWithLogitsLoss(
+        if self.args['weighted_loss']:
+            self.loss_fn_mf = torch.nn.BCEWithLogitsLoss(
             pos_weight=self.compute_weights()).to(self.args['device'])
+        else:
+            self.loss_fn_mf = torch.nn.BCEWithLogitsLoss().to(self.args['device'])
         self.loss_fn_domain = torch.nn.CrossEntropyLoss().to(
             self.args['device'])
         self.loss_fn_trans = TransformationLoss(
@@ -517,8 +520,8 @@ class DomainAdaptTrainer:
             self.scheduler.step()
 
             # log cpu/gpu usage
-            device_info = get_gpu_memory_map()
-            logging.info('GPU/CPU usage (MB): %s' % device_info)
+            # device_info = get_gpu_memory_map()
+            # logging.info('GPU/CPU usage (MB): %s' % device_info)
 
         logging.info('============ Training Summary ============= \n')
         logging.info('Best Macro F1 of the %s VAL dataset: %f' %

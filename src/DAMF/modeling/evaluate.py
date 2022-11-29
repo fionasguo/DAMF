@@ -98,11 +98,6 @@ def evaluate(dataset: MFData,
         f1 score
         also print detailed classification report to log file.
     """
-    if test:
-        logger = logging.getLogger(__name__)
-        orig_level = logger.level
-        logger.setLevel(logging.DEBUG)
-
     device = 'cuda:0' if torch.cuda.is_available() else 'cpu'
 
     assert (model != None
@@ -124,20 +119,26 @@ def evaluate(dataset: MFData,
                                         domain_adapt, is_adv)
 
     # print reports
-    mf_report = metrics.classification_report(dataset.mf_labels,
-                                              mf_preds,
-                                              zero_division=0)
-    logging.debug('MF classification report:')
-    logging.debug(mf_report)
     conf_matrix = metrics.multilabel_confusion_matrix(dataset.mf_labels,
                                                       mf_preds)
-    logging.debug('MF classification confusion matrix:')
-    logging.debug(conf_matrix)
     mf_report = metrics.classification_report(dataset.mf_labels,
                                               mf_preds,
                                               zero_division=0,
                                               output_dict=True)
     macro_f1 = mf_report['weighted avg']['f1-score']
+    mf_report = metrics.classification_report(dataset.mf_labels,
+                                              mf_preds,
+                                              zero_division=0) 
+    if test:
+        logging.info('MF classification report:')
+        logging.info(mf_report)
+        logging.info('MF classification confusion matrix:')
+        logging.info(conf_matrix)
+    else:
+        logging.debug('MF classification report:')
+        logging.debug(mf_report)
+        logging.debug('MF classification confusion matrix:')
+        logging.debug(conf_matrix)
 
     if domain_adapt and is_adv:
         domain_report = metrics.classification_report(dataset.domain_labels,
@@ -145,13 +146,10 @@ def evaluate(dataset: MFData,
                                       zero_division=0)
         conf_matrix = metrics.confusion_matrix(dataset.domain_labels,
                                                domain_preds)
+
         logging.debug('Domain classification report:')
         logging.debug(domain_report)
         logging.debug('Domain classification confusion matrix:')
         logging.debug(conf_matrix)
-
-    # set logging level back to original
-    if test:
-        logger.setLevel(orig_level)
 
     return macro_f1, mf_preds

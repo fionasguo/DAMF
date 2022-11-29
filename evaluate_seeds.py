@@ -69,7 +69,7 @@ if __name__ == '__main__':
         logfilename = datetime.now().strftime("%Y%m%d%H%M%S")
     logging.basicConfig(filename=logfilename + '.log',
                         format="%(message)s",
-                        level=logging.DEBUG)
+                        level=logging.INFO)
 
     # args
     args = {}
@@ -83,6 +83,7 @@ if __name__ == '__main__':
     for seed in args['seed_lst']:
         logging.info('Start evaluating seed %d' % seed)
 
+        args['seed'] = seed
         set_seed(seed)
 
         # load data
@@ -101,17 +102,15 @@ if __name__ == '__main__':
 
         test_accu,_ = evaluate(datasets['test'],
                                args['batch_size'],
-                               model_path=args['output_path']+'/best_model.pth',
-                               domain_adapt=args['domain_adapt'],
+                               model_path=args['output_dir']+'/best_model.pth',
+                               is_adv=args['domain_adapt'],
                                test=True
         )
         test_accus.append(test_accu)
         logging.info('Seed = %d. Macro F1 of the target TEST dataset with best model: %f' % (seed, test_accu))
 
         # clean up best_model file
-        bashCommand = "rm " + args['output_path'] + '/best_model.pth'
-        process = subprocess.Popen(bashCommand.split(), stdout=subprocess.PIPE)
-        output, error = process.communicate()
+        subprocess.call(["rm", args['output_dir'] + '/best_model.pth'])
 
     mean = sum(test_accus) / len(test_accus)
     variance = sum([((x - mean) ** 2) for x in test_accus]) / len(test_accus)

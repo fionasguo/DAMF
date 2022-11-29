@@ -78,7 +78,7 @@ if __name__ == '__main__':
         logfilename = datetime.now().strftime("%Y%m%d%H%M%S")
     logging.basicConfig(filename=logfilename + '.log',
                         format="%(message)s",
-                        level=logging.DEBUG)
+                        level=logging.INFO)
 
     # args
     args = {}
@@ -91,13 +91,15 @@ if __name__ == '__main__':
     for lambda_trans in args['lambda_trans_lst']:
         for lambda_rec in args['lambda_rec_lst']:
             for gamma in args['gamma_lst']:
-                logging.info(f"\nStart HP search: lambda_trans={lambda_trans}, lambda_rec={lambda_rec}, gamma={args['gamma']}")
+                logging.info(f"\nStart HP search: lambda_trans={lambda_trans}, lambda_rec={lambda_rec}, gamma={gamma}")
 
                 args['lambda_rec'] = lambda_rec
                 args['lambda_trans'] = lambda_trans
                 args['gamma'] = gamma
 
-                datasets = load_data(args['data_dir'],
+                set_seed(args['seed'])
+
+                datasets = read_data(args['data_dir'],
                                      args['pretrained_dir'],
                                      args['n_mf_classes'],
                                      args['train_domain'],
@@ -111,29 +113,29 @@ if __name__ == '__main__':
 
                 test_accu,_ = evaluate(datasets['test'],
                                     args['batch_size'],
-                                    model_path=args['output_path']+'/best_model.pth',
-                                    domain_adapt=args['domain_adapt'],
+                                    model_path=args['output_dir']+'/best_model.pth',
+                                    is_adv=args['domain_adapt'],
                                     test=True
                 )
-                logging.info(f"\nHP search result: lambda_trans={lambda_trans}, lambda_rec={lambda_rec}, gamma={args['gamma']}, num_no_adv={args['num_no_adv']}, val accu={accu}, test accu={test_accu}")
+                logging.info(f"\nHP search result: lambda_trans={lambda_trans}, lambda_rec={lambda_rec}, gamma={gamma}, num_no_adv/epoch={args['num_no_adv']}/{args['n_epoch']}, val accu={accu}, test accu={test_accu}")
                 if accu > best_accu:
                     best_accu = accu
                     best_lambda_rec = lambda_rec
                     best_lambda_trans = lambda_trans
                     best_gamma = gamma
 
-                    subprocess.call(['cp',args['output_path']+'/best_model.pth',args['output_path']+'/hp_search_best_model.pth'])
+                    subprocess.call(['cp',args['output_dir']+'/best_model.pth',args['output_dir']+'/hp_search_best_model.pth'])
 
                     # clean up best_model file
-                    subprocess.call(["rm", args['output_path'] + '/best_model.pth'])
+                    subprocess.call(["rm", args['output_dir'] + '/best_model.pth'])
 
-    logging.info(f"\nHyperparameter search finished. Best model has lambda_trans={best_lambda_trans}, lambda_rec={best_lambda_rec}, gamma={args['gamma']}, num_no_adv={args['num_no_adv']}. Macro F1={best_accu}\n")
+    logging.info(f"\nHyperparameter search finished. Best model has lambda_trans={best_lambda_trans}, lambda_rec={best_lambda_rec}, gamma={best_gamma}, num_no_adv/epoch={args['num_no_adv']}/{args['n_epoch']}. Val Macro F1={best_accu}\n")
 
     logging.info('============ Evaluation on Test Data ============= \n')
-    test_accu = evaluate(datasets['test'],
+    test_accu,_ = evaluate(datasets['test'],
                         args['batch_size'],
-                        model_path=args['output_path']+'/hp_search_best_model.pth',
-                        domain_adapt=args['domain_adapt'],
+                        model_path=args['output_dir']+'/hp_search_best_model.pth',
+                        is_adv=args['domain_adapt'],
                         test=True
     )
     logging.info('Macro F1 of the %s TEST dataset with given (best) model: %f' % ('target', test_accu))
