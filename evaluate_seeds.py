@@ -93,6 +93,7 @@ if __name__ == '__main__':
                              args['train_domain'],
                              args['test_domain'],
                              args['semi_supervised'],
+                             args['aflite'],
                              seed=seed,
                              train_frac=0.8)
 
@@ -117,4 +118,3 @@ if __name__ == '__main__':
     std_dev = variance ** 0.5
     logging.info('Evaluation over different seeds %s is done. Average F1 = %f; std dev = %f' % (str(args['seed_lst']), mean, std_dev))
     logging.info(f"Time: {time.time()-start_time}")
-

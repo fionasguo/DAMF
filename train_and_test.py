@@ -106,8 +106,12 @@ if __name__ == '__main__':
                          args['train_domain'],
                          args['test_domain'],
                          args['semi_supervised'],
+                         args['aflite'],
                          seed=args['seed'],
                          train_frac=0.9)
+
+    if args['aflite']:
+        datasets = aflite(datasets)
 
     logging.info(f'Finished processing data. Time: {time.time()-start_time}')
 

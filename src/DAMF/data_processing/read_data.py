@@ -137,6 +137,7 @@ def read_data(data_dir: str,
               train_domain: List[str],
               test_domain: List[str],
               semi_supervised: bool,
+              aflite: bool,
               max_seq_len: int = 50,
               train_frac: float = 0.8,
               seed: int = 3) -> Dict[str, MFData]:
@@ -150,6 +151,7 @@ def read_data(data_dir: str,
         train_domain: the name of the domains for training, should be in the 'domain' column in df
         test_domain: the name of the domains for testing
         semi_supervised: if true, separate train/dev/test data by source and target domains
+        aflite: whether to run AFlite algorithm to denoise the training data
         max_seq_length: max number of tokens from each input text used by the tokenizer
         train_frac: the fraction of number of data points used for training
         seed: random seed
@@ -177,6 +179,15 @@ def read_data(data_dir: str,
         # if data_dir is a csv, peform train test split
         dataset_dict = train_test_split(data_dir, train_domain, test_domain,
                                         semi_supervised, train_frac, seed)
+
+    # aflite for denoising the training data
+    if aflite:
+        if 'train' in dataset_dict:
+            dataset_dict['train'] = run_aflite(dataset_dict['train'])
+        elif 's_train' in dataset_dict:
+            dataset_dict['s_train'] = run_aflite(dataset_dict['s_train'])
+        else:
+            logging.info('AFLite requested but no trainig data for it')
 
     # init the tokenzier
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_path,

@@ -36,7 +36,7 @@ def get_gpu_memory_map():
             'cpu_count': os.cpu_count(),
             '% RAM used': psutil.virtual_memory()[2]
         }
-        
+
     gpu_memory_map = {}
     for i in range(count_devices()):
         gpu_memory_map[i] = round(torch.cuda.memory_allocated(i)/1024/1024/1024,2)
@@ -84,6 +84,7 @@ def read_config(curr_dir, args):
     args['reconstruction'] = literal_eval(args['reconstruction'])
     args['semi_supervised'] = literal_eval(args['semi_supervised'])
     args['weighted_loss'] = literal_eval(args['weighted_loss'])
+    args['aflite'] = literal_eval(args['aflite'])
     # train/test domains
     if args['train_domain'][0] == '[':
         args['train_domain'] = literal_eval(args['train_domain'])
