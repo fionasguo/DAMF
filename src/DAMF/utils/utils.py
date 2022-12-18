@@ -108,10 +108,14 @@ def read_config(curr_dir, args):
         args['lambda_trans'] = float(args['lambda_trans'])
     except:
         args['lambda_trans'] = 0.0
+    if args['lambda_trans'] == 0:
+        args['transformation'] = False
     try:
         args['lambda_rec'] = float(args['lambda_rec'])
     except:
         args['lambda_rec'] = 0.0
+    if args['lambda_rec'] == 0:
+        args['reconstruction'] = False
     try:
         args['lambda_domain'] = 0.0
         args['num_no_adv'] = int(args['num_no_adv'])

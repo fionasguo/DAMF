@@ -4,6 +4,7 @@ domain_adapt = True
 transformation = True
 reconstruction = True
 semi_supervised = True
+weighted_loss = True
 
 train_domain = ['twitter','eMFD']
 test_domain = ['incas']

@@ -152,8 +152,8 @@ def feature_embedding_analysis(source_dataset: MFData,
     s_feats.extend(t_feats)
     feats = np.array(s_feats)
 
-    s_domain_labels = source_dataset.dataset.domain_labels
-    t_domain_labels = target_dataset.dataset.domain_labels
+    s_domain_labels = source_dataset.dataset.domain_labels[source_random_idx]
+    t_domain_labels = target_dataset.dataset.domain_labels[target_random_idx]
     domain_labels = np.hstack((s_domain_labels,t_domain_labels)).squeeze()
 
     np.savetxt(fig_save_path + '/feat_embeddings.tsv', feats)

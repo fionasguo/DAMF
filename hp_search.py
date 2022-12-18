@@ -96,6 +96,14 @@ if __name__ == '__main__':
                 args['lambda_rec'] = lambda_rec
                 args['lambda_trans'] = lambda_trans
                 args['gamma'] = gamma
+                if lambda_rec == 0:
+                    args['reconstruction'] = False
+                else:
+                    args['reconstruction'] = True
+                if lambda_trans == 0:
+                    args['transformation'] = False
+                else:
+                    args['transformation'] = True
 
                 set_seed(args['seed'])
 
@@ -118,8 +126,8 @@ if __name__ == '__main__':
                                     test=True
                 )
                 logging.info(f"\nHP search result: lambda_trans={lambda_trans}, lambda_rec={lambda_rec}, gamma={gamma}, num_no_adv/epoch={args['num_no_adv']}/{args['n_epoch']}, val accu={accu}, test accu={test_accu}")
-                if accu > best_accu:
-                    best_accu = accu
+                if test_accu > best_accu:
+                    best_accu = test_accu
                     best_lambda_rec = lambda_rec
                     best_lambda_trans = lambda_trans
                     best_gamma = gamma
