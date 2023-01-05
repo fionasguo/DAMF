@@ -5,6 +5,7 @@ import torch
 from collections import Counter
 from tqdm import tqdm
 import logging
+import transformers
 from transformers import BertModel,BertTokenizer
 
 
@@ -145,6 +146,6 @@ def run_aflite(data, mf_classes, target_frac=0.5, max_seq_len=50):
         if newly_removed < cutoff_size:
             break
 
-    print ('finally keeping %d', len(data))
+    logging.info('finally keeping %d', len(data))
 
     return data

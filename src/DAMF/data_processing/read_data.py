@@ -17,6 +17,7 @@ from transformers import AutoTokenizer
 from .preprocessing import preprocess_tweet
 from .data_loader import MFData
 from .train_test_split import gen_in_domain_data, gen_out_domain_data, gen_semi_supervised
+from .AFLite import run_aflite
 
 pd.options.mode.chained_assignment = None
 
@@ -74,7 +75,7 @@ def train_test_split(data_dir: str,
     # df = df[~df.text.isnull()]
     df.loc[df.text.isnull(),'text'] = ' '
     df.text = df.text.apply(preprocess_tweet)
-    # df = df[df.text != '']
+    df = df[df.text != '']
     df = df.reset_index()
 
     # generate train/val/test datasets
@@ -123,7 +124,7 @@ def load_data(data_dir: str, train_domain: List[str],
         df['domain_idx'] = df['domain'].apply(lambda x: domains.index(x))
 
         df.text = df.text.apply(preprocess_tweet)
-        # df = df[df.text != '']
+        df = df[df.text != '']
         df = df.reset_index()
 
         dataset_dict[data_name] = df
@@ -183,9 +184,9 @@ def read_data(data_dir: str,
     # aflite for denoising the training data
     if aflite:
         if 'train' in dataset_dict:
-            dataset_dict['train'] = run_aflite(dataset_dict['train'])
+            dataset_dict['train'] = run_aflite(dataset_dict['train'], mf_label_names)
         elif 's_train' in dataset_dict:
-            dataset_dict['s_train'] = run_aflite(dataset_dict['s_train'])
+            dataset_dict['s_train'] = run_aflite(dataset_dict['s_train'], mf_label_names)
         else:
             logging.info('AFLite requested but no trainig data for it')
 
