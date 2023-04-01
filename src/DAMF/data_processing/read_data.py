@@ -75,7 +75,6 @@ def train_test_split(data_dir: str,
     # df = df[~df.text.isnull()]
     df.loc[df.text.isnull(),'text'] = ' '
     df.text = df.text.apply(preprocess_tweet)
-    df = df[df.text != '']
     df = df.reset_index()
 
     # generate train/val/test datasets
@@ -124,7 +123,6 @@ def load_data(data_dir: str, train_domain: List[str],
         df['domain_idx'] = df['domain'].apply(lambda x: domains.index(x))
 
         df.text = df.text.apply(preprocess_tweet)
-        df = df[df.text != '']
         df = df.reset_index()
 
         dataset_dict[data_name] = df
