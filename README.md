@@ -2,7 +2,9 @@
 
 ## Overview
 
-A supervised method to predict moral foundations from texts.
+This method aims to detect the moral foundations expressed in textual data.
+
+CUrrently, many ground truth datasets with moral annotations exists. They vary in the method of data collection, domain, topics, instructions for annotators, etc. Simply aggregating such heterogeneous datasets during training can yield models that fail to generalize well. **DAMF** is a data fusion framework for training on multiple heterogeneous datasets that improve performance and generalizability. The model uses domain adversarial training to align the datasets in feature space and a weighted loss function to deal with label shift.
 
 ## Install
 
@@ -62,7 +64,7 @@ Run:
 python3 train_and_test.py -m test -c config -i data/all_mf_data.csv -o outputs -t trained_models/ckpt
 ```
 
-Arguments:
+Command line arguments:
 
 - -m: mode, options: train, test, or train_test
 - -c: path to the config file
@@ -82,6 +84,8 @@ All arguments:
 - transformation: bool, whether to include a linear transformation module to facilitate domain-invariant feature generation
 - reconstruction: bool, whether to include a reconstruction module to keep feature encoder from overly corruption by adversarial training
 - semi_supervised: bool, whether to use semi-supervised training where labeled source data and unlabeled target data are both used for training
+- weighted_loss: whether to use weighted loss to mitigate label shift
+- aflite: bool, whether to perform AFLite as a pre-processing step to filter out data points that might contain spurious correlation
 - train_domain: one str or a list of str, the source domain, eg. 'MFTC', or ['MFTC','congress']
 - test_domain: one str or a list of str, the target domain, eg. ['congress']
 - n_mf_classes: int, can be 10 (number of moral foundation classes), 5 (don't distinguish between virtues and vices) or 2 (moral vs immoral)
