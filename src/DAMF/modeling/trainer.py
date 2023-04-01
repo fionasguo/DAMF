@@ -95,6 +95,7 @@ class DomainAdaptTrainer:
             if epoch >= self.args['num_no_adv']:
                 tot_epochs_for_calc = self.args['n_epoch'] - \
                     self.args['num_no_adv']
+                if tot_epochs_for_calc == 0: return 1
                 epoch_for_calc = epoch - self.args['num_no_adv']
                 p = epoch_for_calc / tot_epochs_for_calc
                 decay_factor = 1 / \
