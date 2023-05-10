@@ -129,16 +129,19 @@ def evaluate(dataset: MFData,
     mf_report = metrics.classification_report(dataset.mf_labels,
                                               mf_preds,
                                               zero_division=0) 
+    auc = metrics.roc_auc_score(dataset.mf_labels, mf_preds, average=None)
     if test:
         logging.info('MF classification report:')
         logging.info(mf_report)
         logging.info('MF classification confusion matrix:')
         logging.info(conf_matrix)
+        logging.info('AUC-ROC scores:', auc)
     else:
         logging.debug('MF classification report:')
         logging.debug(mf_report)
         logging.debug('MF classification confusion matrix:')
         logging.debug(conf_matrix)
+        logging.debug('AUC-ROC scores:', auc)
 
     if domain_adapt and is_adv:
         domain_report = metrics.classification_report(dataset.domain_labels,
