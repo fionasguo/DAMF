@@ -20,6 +20,8 @@ python setup.py install
 
 ## Dependencies
 
+Tested on Python version 3.9.13
+
 Will be automatically installed when running setup.py.
 
 All dependencies are in [`requirments.txt`](https://github.com/fionasguo/DAMF/blob/master/requirements.txt)
