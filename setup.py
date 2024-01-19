@@ -1,16 +1,16 @@
 from setuptools import find_packages, setup
 
 _deps = [
-    'nltk',
-    'emoji',
-    'pandas',
-    'typing',
-    'transformers',
-    'torch',
-    'numpy',
-    'sklearn',
-    'seaborn',
-    'psutil',
+    'nltk==3.7',
+    'emoji==2.1.0',
+    'pandas==1.4.4',
+    'typing==4.3.0',
+    'transformers==4.23.1',
+    'torch==1.11.0',
+    'numpy==1.21.5',
+    'sklearn==0.24.2',
+    'seaborn==0.12.0',
+    'psutil==5.9.0',
 ]
 
 setup(
